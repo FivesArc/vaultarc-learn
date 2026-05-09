@@ -130,9 +130,9 @@ export default function NotesPage() {
       >
         <Upload size={32} style={{ margin: '0 auto 12px', opacity: 0.5 }} />
         <div style={{ fontWeight: 600 }}>Drop a file here or click to browse</div>
-        <div style={{ fontSize: 13, marginTop: 6, color: 'var(--text-muted)' }}>Supports .txt, .md, and other text files</div>
+        <div style={{ fontSize: 13, marginTop: 6, color: 'var(--text-muted)' }}>Supports PDF, .txt, .md and other text files</div>
         {loading && <div style={{ marginTop: 16 }}><span className="spinner" style={{ borderTopColor: 'var(--accent)' }} /></div>}
-        <input id="file-input" type="file" style={{ display: 'none' }} accept=".txt,.md,.csv" onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFileDrop(f) }} />
+        <input id="file-input" type="file" style={{ display: 'none' }} accept=".pdf,.txt,.md,.csv" onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFileDrop(f) }} />
       </div>
     </div>
   )
