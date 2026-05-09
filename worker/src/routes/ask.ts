@@ -1,6 +1,6 @@
 import { Hono } from 'hono'
 import { Env } from '../index'
-import { runAI } from '../lib/ai'
+import { runAI, truncateForAI } from '../lib/ai'
 
 export const ask = new Hono<{ Bindings: Env }>()
 
@@ -15,10 +15,11 @@ ask.post('/', async (c) => {
 
     if (!note) return c.json({ error: 'Note not found' }, 404)
 
-    const system = `You are a helpful study assistant. The user is studying notes titled "${note.title}". Answer questions based on the note content. If the answer isn't in the notes, say so.
+    const { text: noteText, truncated } = truncateForAI(note.content || '')
+    const system = `You are a helpful study assistant. The user is studying notes titled "${note.title}".${truncated ? ' Note: the content below is a portion of a larger document.' : ''} Answer questions based on the note content. If the answer isn't in the notes, say so.
 
 NOTE CONTENT:
-${note.content || '(empty note — no content yet)'}`
+${noteText || '(empty note — no content yet)'}`
 
     const answer = await runAI(c.env.AI, system, question)
     return c.json({ question, answer })

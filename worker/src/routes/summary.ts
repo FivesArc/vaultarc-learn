@@ -1,6 +1,6 @@
 import { Hono } from 'hono'
 import { Env } from '../index'
-import { runAI } from '../lib/ai'
+import { runAI, truncateForAI } from '../lib/ai'
 
 export const summary = new Hono<{ Bindings: Env }>()
 
@@ -18,7 +18,8 @@ summary.post('/', async (c) => {
 
     const system = `You are a study assistant. Summarise the provided notes in a clear, concise way using bullet points. Focus on key concepts and important facts. Keep it brief but comprehensive.`
 
-    const text = await runAI(c.env.AI, system, `Summarise these notes titled "${note.title}":\n\n${note.content}`)
+    const { text: noteText } = truncateForAI(note.content)
+    const text = await runAI(c.env.AI, system, `Summarise these notes titled "${note.title}":\n\n${noteText}`)
     return c.json({ summary: text })
   } catch (e: any) {
     return c.json({ error: e.message ?? 'Internal error' }, 500)

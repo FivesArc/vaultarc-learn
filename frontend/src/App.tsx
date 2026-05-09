@@ -1,19 +1,21 @@
 import { useState, Component } from 'react'
 import type { ReactNode } from 'react'
-import { FileText, MessageSquare, Zap, Layers, Menu, X } from 'lucide-react'
+import { FileText, MessageSquare, Zap, Layers, Menu, X, Timer } from 'lucide-react'
 import NotesPage from './pages/NotesPage'
 import AskPage from './pages/AskPage'
 import QuizPage from './pages/QuizPage'
 import FlashcardsPage from './pages/FlashcardsPage'
+import StudyTimerPage from './pages/StudyTimerPage'
 import './index.css'
 
-type Page = 'notes' | 'ask' | 'quiz' | 'flashcards'
+type Page = 'notes' | 'ask' | 'quiz' | 'flashcards' | 'timer'
 
 const nav = [
   { id: 'notes' as Page, label: 'My Notes', icon: FileText },
   { id: 'ask' as Page, label: 'Ask AI', icon: MessageSquare },
   { id: 'flashcards' as Page, label: 'Flashcards', icon: Layers },
   { id: 'quiz' as Page, label: 'Quiz Me', icon: Zap },
+  { id: 'timer' as Page, label: 'Study Timer', icon: Timer },
 ]
 
 class ErrorBoundary extends Component<{ children: ReactNode }, { error: string | null }> {
@@ -79,6 +81,7 @@ export default function App() {
               {page === 'ask' && <AskPage />}
               {page === 'flashcards' && <FlashcardsPage />}
               {page === 'quiz' && <QuizPage />}
+              {page === 'timer' && <StudyTimerPage />}
             </ErrorBoundary>
           </main>
         </div>

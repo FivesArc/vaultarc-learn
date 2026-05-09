@@ -1,6 +1,6 @@
 import { Hono } from 'hono'
 import { Env } from '../index'
-import { runAI } from '../lib/ai'
+import { runAI, truncateForAI } from '../lib/ai'
 
 export type Flashcard = { front: string; back: string }
 
@@ -25,7 +25,8 @@ Generate ${count} flashcards from the notes. Each card has a front (question/ter
 Output format (raw JSON array only):
 [{"front":"...","back":"..."}]`
 
-    const raw = await runAI(c.env.AI, system, note.content)
+    const { text: noteText } = truncateForAI(note.content)
+    const raw = await runAI(c.env.AI, system, noteText)
 
     let cards: Flashcard[]
     try {

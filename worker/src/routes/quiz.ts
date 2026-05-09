@@ -1,6 +1,6 @@
 import { Hono } from 'hono'
 import { Env } from '../index'
-import { runAI } from '../lib/ai'
+import { runAI, truncateForAI } from '../lib/ai'
 import { nanoid } from '../lib/id'
 
 type Question = {
@@ -42,7 +42,8 @@ Output format (raw JSON array only):
 
 "correct" is the 0-based index of the correct answer.`
 
-    const raw = await runAI(c.env.AI, system, note.content)
+    const { text: noteText } = truncateForAI(note.content)
+    const raw = await runAI(c.env.AI, system, noteText)
 
     let questions: Question[]
     try {

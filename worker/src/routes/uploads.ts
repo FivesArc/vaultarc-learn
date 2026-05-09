@@ -3,16 +3,26 @@ import { Env } from '../index'
 import { nanoid } from '../lib/id'
 import { extractText, getDocumentProxy } from 'unpdf'
 
+const MAX_FILE_BYTES = 15 * 1024 * 1024   // 15MB hard limit
+const MAX_TEXT_CHARS = 120_000             // ~30 pages of text
+
 export const uploads = new Hono<{ Bindings: Env }>()
 
-async function extractTextFromFile(file: File): Promise<string> {
+async function extractTextFromFile(file: File): Promise<{ text: string; truncated: boolean }> {
   if (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
     const buffer = await file.arrayBuffer()
     const pdf = await getDocumentProxy(new Uint8Array(buffer))
     const { text } = await extractText(pdf, { mergePages: true })
-    return text
+    if (text.length > MAX_TEXT_CHARS) {
+      return { text: text.slice(0, MAX_TEXT_CHARS) + '\n\n---\n_Note: PDF was too large — only the first portion was imported._', truncated: true }
+    }
+    return { text, truncated: false }
   }
-  return file.text()
+  const text = await file.text()
+  if (text.length > MAX_TEXT_CHARS) {
+    return { text: text.slice(0, MAX_TEXT_CHARS) + '\n\n---\n_Note: File was too large — only the first portion was imported._', truncated: true }
+  }
+  return { text, truncated: false }
 }
 
 uploads.post('/', async (c) => {
@@ -21,10 +31,12 @@ uploads.post('/', async (c) => {
   const title = formData.get('title') as string | null
 
   if (!file) return c.json({ error: 'file required' }, 400)
+  if (file.size > MAX_FILE_BYTES) return c.json({ error: `File too large. Maximum size is 15MB.` }, 400)
 
   let text: string
+  let truncated: boolean
   try {
-    text = await extractTextFromFile(file)
+    ;({ text, truncated } = await extractTextFromFile(file))
   } catch (e: any) {
     return c.json({ error: `Failed to extract text: ${e.message}` }, 400)
   }
@@ -46,5 +58,5 @@ uploads.post('/', async (c) => {
     .bind(id, noteTitle, text, 'upload', fileKey, now, now)
     .run()
 
-  return c.json({ id, title: noteTitle, source_type: 'upload', file_key: fileKey }, 201)
+  return c.json({ id, title: noteTitle, source_type: 'upload', file_key: fileKey, truncated }, 201)
 })

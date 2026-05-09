@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { api } from '../lib/api'
 import type { Note } from '../lib/api'
-import { FileText, Plus, Upload, Trash2, Search, Sparkles, X } from 'lucide-react'
+import { FileText, Plus, Upload, Trash2, Search, Sparkles, X, Download, Tag } from 'lucide-react'
 import Markdown from 'react-markdown'
 
 type View = 'list' | 'new' | 'edit' | 'upload'
@@ -14,112 +14,111 @@ export default function NotesPage() {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
   const [search, setSearch] = useState('')
+  const [activeTag, setActiveTag] = useState('')
+  const [allTags, setAllTags] = useState<string[]>([])
   const [summary, setSummary] = useState('')
   const [summarising, setSummarising] = useState(false)
   const [dragOver, setDragOver] = useState(false)
   const [title, setTitle] = useState('')
   const [content, setContent] = useState('')
+  const [tags, setTags] = useState('')
   const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const savedRef = useRef<{ title: string; content: string } | null>(null)
+  const savedRef = useRef<{ title: string; content: string; tags: string } | null>(null)
 
-  useEffect(() => { loadNotes() }, [])
+  useEffect(() => { loadNotes(); loadTags() }, [])
 
   useEffect(() => {
-    const handler = setTimeout(() => loadNotes(search), 300)
+    const handler = setTimeout(() => loadNotes(search, activeTag), 300)
     return () => clearTimeout(handler)
-  }, [search])
+  }, [search, activeTag])
 
-  async function loadNotes(q?: string) {
-    try { setNotes(await api.notes.list(q)) } catch { setError('Failed to load notes') }
+  async function loadNotes(q?: string, tag?: string) {
+    try { setNotes(await api.notes.list(q, tag)) } catch { setError('Failed to load notes') }
   }
 
-  const autoSave = useCallback((t: string, c: string, id?: string) => {
+  async function loadTags() {
+    try { setAllTags(await api.notes.tags()) } catch {}
+  }
+
+  const autoSave = useCallback((t: string, c: string, tg: string, id?: string) => {
     if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current)
     autoSaveTimer.current = setTimeout(async () => {
       if (!id) return
-      if (savedRef.current?.title === t && savedRef.current?.content === c) return
+      if (savedRef.current?.title === t && savedRef.current?.content === c && savedRef.current?.tags === tg) return
       setSaving(true)
       try {
-        await api.notes.update(id, { title: t, content: c })
-        savedRef.current = { title: t, content: c }
+        await api.notes.update(id, { title: t, content: c, tags: tg })
+        savedRef.current = { title: t, content: c, tags: tg }
       } finally { setSaving(false) }
     }, 1500)
   }, [])
 
-  function handleTitleChange(val: string) {
-    setTitle(val)
-    if (selected) autoSave(val, content, selected.id)
-  }
-
-  function handleContentChange(val: string) {
-    setContent(val)
-    if (selected) autoSave(title, val, selected.id)
-  }
+  function handleTitleChange(val: string) { setTitle(val); if (selected) autoSave(val, content, tags, selected.id) }
+  function handleContentChange(val: string) { setContent(val); if (selected) autoSave(title, val, tags, selected.id) }
+  function handleTagsChange(val: string) { setTags(val); if (selected) autoSave(title, content, val, selected.id) }
 
   async function saveNote() {
     if (!title.trim()) return
     setLoading(true)
     try {
       if (selected) {
-        await api.notes.update(selected.id, { title, content })
+        await api.notes.update(selected.id, { title, content, tags })
       } else {
-        await api.notes.create(title, content)
+        await api.notes.create(title, content, tags)
       }
-      await loadNotes()
-      goBack()
+      await loadNotes(); await loadTags(); goBack()
     } catch { setError('Failed to save note') } finally { setLoading(false) }
   }
 
   async function deleteNote(id: string) {
     if (!confirm('Delete this note?')) return
     await api.notes.delete(id)
-    loadNotes()
-    goBack()
+    loadNotes(); loadTags(); goBack()
   }
 
   function goBack() {
-    setView('list')
-    setSelected(null)
-    setTitle('')
-    setContent('')
-    setSummary('')
-    savedRef.current = null
+    setView('list'); setSelected(null); setTitle(''); setContent(''); setTags(''); setSummary(''); savedRef.current = null
   }
 
   async function openEdit(note: Note) {
-    setSelected(note)
-    setTitle(note.title)
-    setContent('')
-    setSummary('')
-    setView('edit')
+    setSelected(note); setTitle(note.title); setContent(''); setTags(note.tags || ''); setSummary(''); setView('edit')
     const full = await api.notes.get(note.id)
     setContent(full.content)
-    savedRef.current = { title: note.title, content: full.content }
+    savedRef.current = { title: note.title, content: full.content, tags: note.tags || '' }
   }
 
   async function getSummary() {
     if (!selected) return
     setSummarising(true)
-    try {
-      const { summary: s } = await api.summary(selected.id)
-      setSummary(s)
-    } catch (e: any) { setError(e.message) } finally { setSummarising(false) }
+    try { const { summary: s } = await api.summary(selected.id); setSummary(s) }
+    catch (e: any) { setError(e.message) } finally { setSummarising(false) }
+  }
+
+  function exportNote() {
+    const blob = new Blob([`# ${title}\n\n${content}`], { type: 'text/markdown' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url; a.download = `${title.replace(/[^a-z0-9]/gi, '_')}.md`; a.click()
+    URL.revokeObjectURL(url)
   }
 
   async function handleFileDrop(file: File) {
     setLoading(true)
-    try {
-      await api.upload(file)
-      await loadNotes()
-      setView('list')
-    } catch { setError('Upload failed') } finally { setLoading(false) }
+    try { await api.upload(file); await loadNotes(); setView('list') }
+    catch (e: any) { setError(e.message || 'Upload failed') } finally { setLoading(false) }
   }
+
+  const tagList = tags.split(',').map((t) => t.trim()).filter(Boolean)
 
   if (view === 'upload') return (
     <div>
       <div className="page-header">
         <h2 className="page-title">Upload Notes</h2>
         <button className="btn-ghost" onClick={() => setView('list')}>← Back</button>
+      </div>
+      {error && <div style={{ color: 'var(--danger)', marginBottom: 12, fontSize: 13 }}>{error}</div>}
+      <div style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 16, padding: '10px 14px', background: 'var(--accent-light)', borderRadius: 8, border: '1px solid rgba(184,112,64,0.2)' }}>
+        ⚠️ Max file size: 15MB. Very large PDFs will be partially imported.
       </div>
       <div
         className={`upload-zone${dragOver ? ' drag-over' : ''}`}
@@ -149,16 +148,20 @@ export default function NotesPage() {
       {error && <div style={{ color: 'var(--danger)', marginBottom: 12, fontSize: 13 }}>{error}</div>}
       <div className="editor-area">
         <input placeholder="Note title…" value={title} onChange={(e) => handleTitleChange(e.target.value)} style={{ fontSize: 16, fontWeight: 600 }} />
+        <div style={{ position: 'relative' }}>
+          <Tag size={13} style={{ position: 'absolute', left: 14, top: 13, color: 'var(--text-muted)' }} />
+          <input placeholder="Tags (comma separated: biology, chapter1)" value={tags} onChange={(e) => handleTagsChange(e.target.value)} style={{ paddingLeft: 36, fontSize: 13 }} />
+        </div>
+        {tagList.length > 0 && (
+          <div className="flex gap-2" style={{ flexWrap: 'wrap' }}>
+            {tagList.map((t) => <span key={t} className="badge">{t}</span>)}
+          </div>
+        )}
         <textarea placeholder="Write your notes here…" value={content} onChange={(e) => handleContentChange(e.target.value)} style={{ minHeight: 360 }} />
         <div className="editor-toolbar">
-          <button className="btn-primary" onClick={saveNote} disabled={loading}>
-            {loading ? <span className="spinner" /> : 'Save Note'}
-          </button>
-          {selected && (
-            <button className="btn-ghost" onClick={getSummary} disabled={summarising}>
-              <Sparkles size={13} />{summarising ? 'Summarising…' : 'Summarise'}
-            </button>
-          )}
+          <button className="btn-primary" onClick={saveNote} disabled={loading}>{loading ? <span className="spinner" /> : 'Save Note'}</button>
+          {selected && <button className="btn-ghost" onClick={getSummary} disabled={summarising}><Sparkles size={13} />{summarising ? 'Summarising…' : 'Summarise'}</button>}
+          {selected && <button className="btn-ghost" onClick={exportNote}><Download size={13} />Export .md</button>}
           {selected && <button className="btn-danger" onClick={() => deleteNote(selected.id)}><Trash2 size={13} />Delete</button>}
         </div>
         {summary && (
@@ -178,23 +181,26 @@ export default function NotesPage() {
         <h2 className="page-title">My Notes</h2>
         <div className="flex gap-2">
           <button className="btn-ghost" onClick={() => setView('upload')}><Upload size={13} />Upload</button>
-          <button className="btn-primary" onClick={() => { setTitle(''); setContent(''); setSelected(null); setView('new') }}><Plus size={13} />New Note</button>
+          <button className="btn-primary" onClick={() => { setTitle(''); setContent(''); setTags(''); setSelected(null); setView('new') }}><Plus size={13} />New Note</button>
         </div>
       </div>
-      <div style={{ marginBottom: 16, position: 'relative' }}>
+      <div style={{ marginBottom: 12, position: 'relative' }}>
         <Search size={14} style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
-        <input
-          placeholder="Search notes…"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          style={{ paddingLeft: 38 }}
-        />
+        <input placeholder="Search notes…" value={search} onChange={(e) => setSearch(e.target.value)} style={{ paddingLeft: 38 }} />
       </div>
+      {allTags.length > 0 && (
+        <div className="flex gap-2" style={{ flexWrap: 'wrap', marginBottom: 16 }}>
+          <button onClick={() => setActiveTag('')} className={activeTag === '' ? 'badge' : 'btn-ghost'} style={{ fontSize: 12, padding: '3px 12px', borderRadius: 999 }}>All</button>
+          {allTags.map((t) => (
+            <button key={t} onClick={() => setActiveTag(activeTag === t ? '' : t)} style={{ fontSize: 12, padding: '3px 12px', borderRadius: 999, background: activeTag === t ? 'var(--accent)' : 'var(--surface2)', color: activeTag === t ? '#fff' : 'var(--text-muted)', border: `1px solid ${activeTag === t ? 'var(--accent)' : 'var(--border)'}`, cursor: 'pointer' }}>{t}</button>
+          ))}
+        </div>
+      )}
       {error && <div style={{ color: 'var(--danger)', marginBottom: 12, fontSize: 13 }}>{error}</div>}
       {notes.length === 0 ? (
         <div className="empty-state">
           <FileText size={36} style={{ margin: '0 auto', opacity: 0.4 }} />
-          <p>{search ? `No notes matching "${search}"` : 'No notes yet. Create one or upload a file.'}</p>
+          <p>{search || activeTag ? 'No notes match your filter.' : 'No notes yet. Create one or upload a file.'}</p>
         </div>
       ) : (
         <div className="note-list">
@@ -204,6 +210,11 @@ export default function NotesPage() {
                 <h3>{n.title}</h3>
                 {n.source_type === 'upload' && <span className="badge">uploaded</span>}
               </div>
+              {n.tags && (
+                <div className="flex gap-2" style={{ flexWrap: 'wrap', marginBottom: 4 }}>
+                  {n.tags.split(',').map((t) => t.trim()).filter(Boolean).map((t) => <span key={t} className="badge">{t}</span>)}
+                </div>
+              )}
               <div className="meta">{new Date(n.updated_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</div>
             </div>
           ))}

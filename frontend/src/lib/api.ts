@@ -48,11 +48,18 @@ export type Flashcard = { front: string; back: string }
 
 export const api = {
   notes: {
-    list: (q?: string) => req<Note[]>(`/notes${q ? `?q=${encodeURIComponent(q)}` : ''}`),
+    list: (q?: string, tag?: string) => {
+      const params = new URLSearchParams()
+      if (q) params.set('q', q)
+      if (tag) params.set('tag', tag)
+      const qs = params.toString()
+      return req<Note[]>(`/notes${qs ? `?${qs}` : ''}`)
+    },
     get: (id: string) => req<Note>(`/notes/${id}`),
-    create: (title: string, content: string) =>
-      req<Note>('/notes', { method: 'POST', body: JSON.stringify({ title, content }) }),
-    update: (id: string, data: Partial<Pick<Note, 'title' | 'content'>>) =>
+    tags: () => req<string[]>('/notes/tags'),
+    create: (title: string, content: string, tags = '') =>
+      req<Note>('/notes', { method: 'POST', body: JSON.stringify({ title, content, tags }) }),
+    update: (id: string, data: Partial<Pick<Note, 'title' | 'content' | 'tags'>>) =>
       req<Note>(`/notes/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
     delete: (id: string) => req<{ ok: boolean }>(`/notes/${id}`, { method: 'DELETE' }),
   },
