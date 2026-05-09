@@ -11,7 +11,10 @@
       "Bash(curl -s http://localhost:8787/health)",
       "Bash(gh auth *)",
       "Bash(where git *)",
-      "Bash(git --version)"
+      "Bash(git --version)",
+      "Bash(git add *)",
+      "Bash(git commit -m 'Switch from Anthropic to Cloudflare Workers AI \\(free\\) *)",
+      "Bash(git push *)"
     ]
   }
 }

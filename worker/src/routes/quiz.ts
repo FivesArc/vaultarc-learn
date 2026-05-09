@@ -1,6 +1,6 @@
 import { Hono } from 'hono'
 import { Env } from '../index'
-import { callClaude } from '../lib/claude'
+import { runAI } from '../lib/ai'
 import { nanoid } from '../lib/id'
 
 type Question = {
@@ -36,7 +36,7 @@ Format:
 
 "correct" is the 0-based index of the correct option.`
 
-  const raw = await callClaude(c.env.ANTHROPIC_API_KEY, system, note.content)
+  const raw = await runAI(c.env.AI, system, note.content)
 
   let questions: Question[]
   try {

@@ -1,6 +1,6 @@
 import { Hono } from 'hono'
 import { Env } from '../index'
-import { callClaude } from '../lib/claude'
+import { runAI } from '../lib/ai'
 
 export const ask = new Hono<{ Bindings: Env }>()
 
@@ -20,7 +20,7 @@ ask.post('/', async (c) => {
 NOTE CONTENT:
 ${note.content || '(empty note — no content yet)'}`
 
-    const answer = await callClaude(c.env.ANTHROPIC_API_KEY, system, question)
+    const answer = await runAI(c.env.AI, system, question)
     return c.json({ question, answer })
   } catch (e: any) {
     console.error('Ask error:', e)

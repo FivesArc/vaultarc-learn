@@ -12,5 +12,8 @@ database_id = "a4701d8f-ccda-480f-bbb6-0c043f2189b7"
 binding = "FILES"
 bucket_name = "vaultarc-learn-files"
 
+[ai]
+binding = "AI"
+
 [vars]
 FRONTEND_URL = "https://vaultarc-learn.pages.dev"

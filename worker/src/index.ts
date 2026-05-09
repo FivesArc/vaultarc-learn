@@ -8,7 +8,7 @@ import { uploads } from './routes/uploads'
 export type Env = {
   DB: D1Database
   FILES: R2Bucket
-  ANTHROPIC_API_KEY: string
+  AI: Ai
   FRONTEND_URL: string
 }
 
