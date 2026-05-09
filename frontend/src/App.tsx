@@ -1,17 +1,15 @@
 import { useState, Component } from 'react'
 import type { ReactNode } from 'react'
-import { FileText, MessageSquare, Zap, Layers, Menu, X, LayoutDashboard } from 'lucide-react'
+import { FileText, MessageSquare, Zap, Layers, Menu, X } from 'lucide-react'
 import NotesPage from './pages/NotesPage'
 import AskPage from './pages/AskPage'
 import QuizPage from './pages/QuizPage'
 import FlashcardsPage from './pages/FlashcardsPage'
-import DashboardPage from './pages/DashboardPage'
 import './index.css'
 
-type Page = 'dashboard' | 'notes' | 'ask' | 'quiz' | 'flashcards'
+type Page = 'notes' | 'ask' | 'quiz' | 'flashcards'
 
 const nav = [
-  { id: 'dashboard' as Page, label: 'Dashboard', icon: LayoutDashboard },
   { id: 'notes' as Page, label: 'My Notes', icon: FileText },
   { id: 'ask' as Page, label: 'Ask AI', icon: MessageSquare },
   { id: 'flashcards' as Page, label: 'Flashcards', icon: Layers },
@@ -32,7 +30,7 @@ class ErrorBoundary extends Component<{ children: ReactNode }, { error: string |
 }
 
 export default function App() {
-  const [page, setPage] = useState<Page>('dashboard')
+  const [page, setPage] = useState<Page>('notes')
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
   function navigate(id: Page) {
@@ -80,7 +78,6 @@ export default function App() {
               {page === 'notes' && <NotesPage />}
               {page === 'ask' && <AskPage />}
               {page === 'flashcards' && <FlashcardsPage />}
-              {page === 'dashboard' && <DashboardPage />}
               {page === 'quiz' && <QuizPage />}
             </ErrorBoundary>
           </main>
