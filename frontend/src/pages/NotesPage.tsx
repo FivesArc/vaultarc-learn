@@ -46,11 +46,13 @@ export default function NotesPage() {
     if (selected?.id === id) { setSelected(null); setView('list') }
   }
 
-  function openEdit(note: Note) {
+  async function openEdit(note: Note) {
     setSelected(note)
     setTitle(note.title)
-    setContent(note.content)
+    setContent('')
     setView('edit')
+    const full = await api.notes.get(note.id)
+    setContent(full.content)
   }
 
   async function handleFileDrop(file: File) {
