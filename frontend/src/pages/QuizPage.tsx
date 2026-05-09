@@ -1,15 +1,18 @@
 import { useState, useEffect } from 'react'
 import { api } from '../lib/api'
-import type { Note, Quiz, QuizResult } from '../lib/api'
-import { Zap, RotateCcw, History } from 'lucide-react'
+import type { Note, QuizResult, Question } from '../lib/api'
+import { Zap, RotateCcw, History, Briefcase } from 'lucide-react'
+import { recordQuizComplete, addWeakAreas } from '../lib/gamification'
 
 type Stage = 'setup' | 'taking' | 'result'
+type Mode = 'standard' | 'scenario'
 
 export default function QuizPage() {
   const [notes, setNotes] = useState<Note[]>([])
   const [selectedNoteId, setSelectedNoteId] = useState('')
   const [count, setCount] = useState(5)
-  const [quiz, setQuiz] = useState<Quiz | null>(null)
+  const [mode, setMode] = useState<Mode>('standard')
+  const [quiz, setQuiz] = useState<{ title: string; questions: Question[]; id?: string } | null>(null)
   const [answers, setAnswers] = useState<(number | null)[]>([])
   const [result, setResult] = useState<QuizResult | null>(null)
   const [stage, setStage] = useState<Stage>('setup')
@@ -17,6 +20,7 @@ export default function QuizPage() {
   const [error, setError] = useState('')
   const [history, setHistory] = useState<QuizResult[]>([])
   const [showHistory, setShowHistory] = useState(false)
+  const [newBadges, setNewBadges] = useState<{ emoji: string; label: string }[]>([])
 
   useEffect(() => { api.notes.list().then(setNotes) }, [])
 
@@ -25,9 +29,15 @@ export default function QuizPage() {
     setLoading(true)
     setError('')
     try {
-      const q = await api.quiz.generate(selectedNoteId, count)
-      setQuiz(q)
-      setAnswers(new Array(q.questions.length).fill(null))
+      if (mode === 'scenario') {
+        const q = await api.scenario.generate(selectedNoteId, count)
+        setQuiz({ title: q.title, questions: q.questions })
+        setAnswers(new Array(q.questions.length).fill(null))
+      } else {
+        const q = await api.quiz.generate(selectedNoteId, count)
+        setQuiz(q)
+        setAnswers(new Array(q.questions.length).fill(null))
+      }
       setResult(null)
       setStage('taking')
     } catch (e: any) { setError(e.message) } finally { setLoading(false) }
@@ -37,8 +47,26 @@ export default function QuizPage() {
     if (!quiz || answers.includes(null)) return
     setLoading(true)
     try {
-      const r = await api.quiz.submit(quiz.id, answers as number[])
+      let r: QuizResult
+      if (quiz.id) {
+        r = await api.quiz.submit(quiz.id, answers as number[])
+      } else {
+        // Scenario: calculate locally (not stored in D1)
+        const score = (answers as number[]).reduce((acc, ans, i) => acc + (ans === quiz.questions[i].correct ? 1 : 0), 0)
+        r = { id: '', score, total: quiz.questions.length, percent: Math.round((score / quiz.questions.length) * 100) }
+      }
       setResult(r)
+
+      // Track weak areas
+      const note = notes.find((n) => n.id === selectedNoteId)
+      const wrongQuestions = quiz.questions
+        .filter((_, i) => (answers as number[])[i] !== quiz.questions[i].correct)
+        .map((q) => ({ question: q.question, note_title: note?.title ?? '' }))
+      if (wrongQuestions.length > 0) addWeakAreas(wrongQuestions)
+
+      // Award XP + badges
+      const { newBadges: nb } = recordQuizComplete(r.score, r.total, mode === 'scenario')
+      setNewBadges(nb)
       setStage('result')
     } catch (e: any) { setError(e.message) } finally { setLoading(false) }
   }
@@ -52,12 +80,8 @@ export default function QuizPage() {
   }
 
   function reset() {
-    setQuiz(null)
-    setAnswers([])
-    setResult(null)
-    setStage('setup')
-    setError('')
-    setShowHistory(false)
+    setQuiz(null); setAnswers([]); setResult(null)
+    setStage('setup'); setError(''); setShowHistory(false); setNewBadges([])
   }
 
   if (stage === 'result' && result) return (
@@ -66,10 +90,23 @@ export default function QuizPage() {
         <h2 className="page-title">Quiz Complete</h2>
         <button className="btn-ghost" onClick={reset}><RotateCcw size={13} />New Quiz</button>
       </div>
+
+      {newBadges.length > 0 && (
+        <div style={{ marginBottom: 20, padding: '12px 16px', background: 'var(--accent-light)', border: '1px solid rgba(184,112,64,0.3)', borderRadius: 10, display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+          {newBadges.map((b) => (
+            <span key={b.label} style={{ fontSize: 14, fontWeight: 600, color: 'var(--accent)' }}>{b.emoji} Badge unlocked: {b.label}!</span>
+          ))}
+        </div>
+      )}
+
       <div className="score-card" style={{ marginBottom: 24, maxWidth: 400 }}>
         <div className="score">{result.percent}%</div>
         <div className="label">{result.score} / {result.total} correct</div>
+        <div style={{ fontSize: 13, color: 'var(--text-muted)', marginTop: 8 }}>
+          {result.percent === 100 ? '🎉 Perfect score!' : result.percent >= 80 ? '👍 Great work!' : result.percent >= 60 ? '📚 Keep studying!' : '🔄 Review your notes and try again.'}
+        </div>
       </div>
+
       <div style={{ maxWidth: 640 }}>
         {quiz?.questions.map((q, i) => {
           const userAns = (answers as number[])[i]
@@ -106,11 +143,8 @@ export default function QuizPage() {
             <p>{i + 1}. {q.question}</p>
             <div className="quiz-options">
               {q.options.map((opt, j) => (
-                <button
-                  key={j}
-                  className={`quiz-option${answers[i] === j ? ' selected' : ''}`}
-                  onClick={() => { const a = [...answers]; a[i] = j; setAnswers(a) }}
-                >
+                <button key={j} className={`quiz-option${answers[i] === j ? ' selected' : ''}`}
+                  onClick={() => { const a = [...answers]; a[i] = j; setAnswers(a) }}>
                   <span style={{ fontWeight: 700 }}>{String.fromCharCode(65 + j)}.</span> {opt}
                 </button>
               ))}
@@ -127,8 +161,21 @@ export default function QuizPage() {
 
   return (
     <div>
-      <div className="page-header"><h2 className="page-title">Generate Quiz</h2></div>
+      <div className="page-header"><h2 className="page-title">Quiz Me</h2></div>
       {error && <div style={{ color: 'var(--danger)', marginBottom: 12, fontSize: 13 }}>{error}</div>}
+
+      {/* Mode tabs */}
+      <div className="tabs" style={{ marginBottom: 20 }}>
+        <button className={`tab${mode === 'standard' ? ' active' : ''}`} onClick={() => setMode('standard')}><Zap size={12} style={{ marginRight: 6 }} />Standard</button>
+        <button className={`tab${mode === 'scenario' ? ' active' : ''}`} onClick={() => setMode('scenario')}><Briefcase size={12} style={{ marginRight: 6 }} />Scenario</button>
+      </div>
+
+      {mode === 'scenario' && (
+        <div style={{ marginBottom: 16, padding: '10px 14px', background: 'rgba(106,158,196,0.1)', borderRadius: 8, border: '1px solid rgba(106,158,196,0.3)', fontSize: 13, color: '#4a7a9e' }}>
+          <strong>Scenario Mode</strong> — questions present real-world situations where you must apply your knowledge, not just recall definitions. Great for exam prep.
+        </div>
+      )}
+
       <div className="card" style={{ maxWidth: 480, marginBottom: 24 }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           <div>
@@ -146,12 +193,10 @@ export default function QuizPage() {
           </div>
           <div className="flex gap-2">
             <button className="btn-primary" onClick={generate} disabled={loading || !selectedNoteId} style={{ flex: 1, justifyContent: 'center' }}>
-              {loading ? <><span className="spinner" />Generating…</> : <><Zap size={13} />Generate Quiz</>}
+              {loading ? <><span className="spinner" />Generating…</> : <><Zap size={13} />Generate {mode === 'scenario' ? 'Scenarios' : 'Quiz'}</>}
             </button>
-            {selectedNoteId && (
-              <button className="btn-ghost" onClick={loadHistory} title="View past results">
-                <History size={13} />History
-              </button>
+            {selectedNoteId && mode === 'standard' && (
+              <button className="btn-ghost" onClick={loadHistory}><History size={13} />History</button>
             )}
           </div>
         </div>

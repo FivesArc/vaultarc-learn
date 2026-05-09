@@ -46,6 +46,19 @@ export type QuizResult = {
 
 export type Flashcard = { front: string; back: string }
 
+export type ProgressResult = {
+  id: string
+  quiz_id: string
+  score: number
+  total: number
+  answers: string
+  taken_at: number
+  quiz_title: string
+  note_id: string
+  questions: string
+  note_title: string
+}
+
 export const api = {
   notes: {
     list: (q?: string, tag?: string) => {
@@ -92,6 +105,21 @@ export const api = {
       req<QuizResult>(`/quiz/${quiz_id}/submit`, { method: 'POST', body: JSON.stringify({ answers }) }),
     results: (quiz_id: string) => req<QuizResult[]>(`/quiz/${quiz_id}/results`),
   },
+  eli5: (note_id: string) =>
+    req<{ explanation: string }>('/eli5', { method: 'POST', body: JSON.stringify({ note_id }) }),
+  scenario: {
+    generate: (note_id: string, count = 5) =>
+      req<{ note_id: string; title: string; questions: Question[] }>('/scenario/generate', {
+        method: 'POST', body: JSON.stringify({ note_id, count }),
+      }),
+  },
+  progress: () => req<ProgressResult[]>('/progress'),
+  connections: (note_id: string) =>
+    req<{ connections: { id: string; title: string }[] }>('/connections', {
+      method: 'POST', body: JSON.stringify({ note_id }),
+    }),
+  keyterms: (note_id: string) =>
+    req<{ terms: string[] }>('/keyterms', { method: 'POST', body: JSON.stringify({ note_id }) }),
 }
 
 // localStorage helpers for chat history
