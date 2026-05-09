@@ -147,7 +147,7 @@ export default function NotesPage() {
       </div>
       {error && <div style={{ color: 'var(--danger)', marginBottom: 12, fontSize: 13 }}>{error}</div>}
       <div style={{ display: 'flex', gap: 24, alignItems: 'flex-start' }}>
-        <div className="editor-area" style={{ flex: 1, minWidth: 0 }}>
+        <div className="editor-area" style={{ flex: '1 1 0', minWidth: 0, maxWidth: summary ? 'calc(100% - 340px)' : '100%' }}>
           <input placeholder="Note title…" value={title} onChange={(e) => handleTitleChange(e.target.value)} style={{ fontSize: 16, fontWeight: 600 }} />
           <div style={{ position: 'relative' }}>
             <Tag size={13} style={{ position: 'absolute', left: 14, top: 13, color: 'var(--text-muted)' }} />
@@ -158,7 +158,7 @@ export default function NotesPage() {
               {tagList.map((t) => <span key={t} className="badge">{t}</span>)}
             </div>
           )}
-          <textarea placeholder="Write your notes here…" value={content} onChange={(e) => handleContentChange(e.target.value)} style={{ minHeight: 360 }} />
+          <textarea placeholder="Write your notes here…" value={content} onChange={(e) => handleContentChange(e.target.value)} style={{ minHeight: 480, resize: 'vertical' }} />
           <div className="editor-toolbar">
             <button className="btn-primary" onClick={saveNote} disabled={loading}>{loading ? <span className="spinner" /> : 'Save Note'}</button>
             {selected && <button className="btn-ghost" onClick={getSummary} disabled={summarising}><Sparkles size={13} />{summarising ? 'Summarising…' : 'Summarise'}</button>}
@@ -166,7 +166,7 @@ export default function NotesPage() {
             {selected && <button className="btn-danger" onClick={() => deleteNote(selected.id)}><Trash2 size={13} />Delete</button>}
           </div>
         </div>
-        <div style={{ width: 300, flexShrink: 0 }}>
+        <div style={{ width: 320, flexShrink: 0, position: 'sticky', top: 16 }}>
           {summary ? (
             <div className="card" style={{ position: 'relative', top: 0 }}>
               <button onClick={() => setSummary('')} style={{ position: 'absolute', top: 12, right: 12, padding: 4, background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}><X size={14} /></button>
