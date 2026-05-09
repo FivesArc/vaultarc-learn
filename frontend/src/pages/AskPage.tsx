@@ -33,7 +33,7 @@ export default function AskPage() {
   return (
     <div>
       <div className="page-header">
-        <h2>Ask About Notes</h2>
+        <h2 className="page-title">Ask About Notes</h2>
       </div>
 
       <div style={{ marginBottom: 20, maxWidth: 400 }}>

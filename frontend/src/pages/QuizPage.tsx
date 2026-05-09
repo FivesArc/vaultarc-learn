@@ -56,7 +56,7 @@ export default function QuizPage() {
   if (stage === 'result' && result) return (
     <div>
       <div className="page-header">
-        <h2>Quiz Complete</h2>
+        <h2 className="page-title">Quiz Complete</h2>
         <button className="btn-ghost" onClick={reset}><RotateCcw size={14} style={{ marginRight: 6 }} />New Quiz</button>
       </div>
       <div className="score-card" style={{ marginBottom: 24 }}>
@@ -93,7 +93,7 @@ export default function QuizPage() {
   if (stage === 'taking' && quiz) return (
     <div>
       <div className="page-header">
-        <h2>{quiz.title}</h2>
+        <h2 className="page-title">{quiz.title}</h2>
         <button className="btn-ghost" onClick={reset}>← Back</button>
       </div>
       {error && <div style={{ color: 'var(--danger)', marginBottom: 12 }}>{error}</div>}
@@ -127,7 +127,7 @@ export default function QuizPage() {
 
   return (
     <div>
-      <div className="page-header"><h2>Generate Quiz</h2></div>
+      <div className="page-header"><h2 className="page-title">Generate Quiz</h2></div>
       {error && <div style={{ color: 'var(--danger)', marginBottom: 12 }}>{error}</div>}
       <div className="card" style={{ maxWidth: 480 }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>

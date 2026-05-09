@@ -65,7 +65,7 @@ export default function NotesPage() {
   if (view === 'upload') return (
     <div>
       <div className="page-header">
-        <h2>Upload Notes</h2>
+        <h2 className="page-title">Upload Notes</h2>
         <button className="btn-ghost" onClick={() => setView('list')}>← Back</button>
       </div>
       <div
@@ -87,7 +87,7 @@ export default function NotesPage() {
   if (view === 'new' || view === 'edit') return (
     <div>
       <div className="page-header">
-        <h2>{view === 'new' ? 'New Note' : 'Edit Note'}</h2>
+        <h2 className="page-title">{view === 'new' ? 'New Note' : 'Edit Note'}</h2>
         <button className="btn-ghost" onClick={() => { setView('list'); setSelected(null); setTitle(''); setContent('') }}>← Back</button>
       </div>
       {error && <div style={{ color: 'var(--danger)', marginBottom: 12 }}>{error}</div>}
@@ -107,7 +107,7 @@ export default function NotesPage() {
   return (
     <div>
       <div className="page-header">
-        <h2>My Notes</h2>
+        <h2 className="page-title">My Notes</h2>
         <div className="flex gap-2">
           <button className="btn-ghost" onClick={() => { setView('upload') }}><Upload size={14} style={{ marginRight: 6 }} />Upload</button>
           <button className="btn-primary" onClick={() => { setTitle(''); setContent(''); setSelected(null); setView('new') }}><Plus size={14} style={{ marginRight: 6 }} />New Note</button>
