@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm --version)",
+      "Bash(wrangler --version)",
+      "Bash(npm create *)",
+      "Bash(npm install *)",
+      "Bash(npm init *)",
+      "Bash(npm run *)",
+      "Bash(npx wrangler *)",
+      "Bash(curl -s http://localhost:8787/health)",
+      "Bash(gh auth *)",
+      "Bash(where git *)",
+      "Bash(git --version)"
+    ]
+  }
+}
