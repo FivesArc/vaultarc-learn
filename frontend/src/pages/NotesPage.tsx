@@ -81,7 +81,9 @@ export default function NotesPage() {
   }
 
   async function openEdit(note: Note) {
-    setSelected(note); setTitle(note.title); setContent(''); setTags(note.tags || ''); setSummary(''); setView('edit')
+    setSelected(note); setTitle(note.title); setContent(''); setTags(note.tags || '')
+    setSummary(localStorage.getItem(`vaultarc-summary-${note.id}`) || '')
+    setView('edit')
     const full = await api.notes.get(note.id)
     setContent(full.content)
     savedRef.current = { title: note.title, content: full.content, tags: note.tags || '' }
@@ -90,7 +92,11 @@ export default function NotesPage() {
   async function getSummary() {
     if (!selected) return
     setSummarising(true)
-    try { const { summary: s } = await api.summary(selected.id); setSummary(s) }
+    try {
+      const { summary: s } = await api.summary(selected.id)
+      setSummary(s)
+      localStorage.setItem(`vaultarc-summary-${selected.id}`, s)
+    }
     catch (e: any) { setError(e.message) } finally { setSummarising(false) }
   }
 
@@ -169,7 +175,7 @@ export default function NotesPage() {
         <div style={{ width: 320, flexShrink: 0, position: 'sticky', top: 16 }}>
           {summary ? (
             <div className="card" style={{ position: 'relative', top: 0 }}>
-              <button onClick={() => setSummary('')} style={{ position: 'absolute', top: 12, right: 12, padding: 4, background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}><X size={14} /></button>
+              <button onClick={() => { setSummary(''); if (selected) localStorage.removeItem(`vaultarc-summary-${selected.id}`) }} style={{ position: 'absolute', top: 12, right: 12, padding: 4, background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}><X size={14} /></button>
               <div style={{ fontWeight: 600, marginBottom: 8, fontSize: 13, color: 'var(--accent)' }}>AI Summary</div>
               <div style={{ fontSize: 14, lineHeight: 1.7 }}><Markdown>{summary}</Markdown></div>
             </div>
