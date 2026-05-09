@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { api, loadChatHistory, saveChatHistory, clearChatHistory } from '../lib/api'
 import type { Note, Message } from '../lib/api'
 import { Send, MessageSquare, Trash2 } from 'lucide-react'
+import Markdown from 'react-markdown'
 
 export default function AskPage() {
   const [notes, setNotes] = useState<Note[]>([])
@@ -78,8 +79,8 @@ export default function AskPage() {
               <div className="text-muted" style={{ padding: '12px 0' }}>Ask anything about your selected note.</div>
             )}
             {messages.map((m, i) => (
-              <div key={i} className={`qa-bubble ${m.role}`} style={{ whiteSpace: 'pre-wrap' }}>
-                {m.text}
+              <div key={i} className={`qa-bubble ${m.role}`}>
+                <Markdown>{m.text}</Markdown>
               </div>
             ))}
             {loading && (

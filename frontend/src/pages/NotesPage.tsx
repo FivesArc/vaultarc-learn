@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { api } from '../lib/api'
 import type { Note } from '../lib/api'
 import { FileText, Plus, Upload, Trash2, Search, Sparkles, X } from 'lucide-react'
+import Markdown from 'react-markdown'
 
 type View = 'list' | 'new' | 'edit' | 'upload'
 
@@ -164,7 +165,7 @@ export default function NotesPage() {
           <div className="card" style={{ position: 'relative' }}>
             <button onClick={() => setSummary('')} style={{ position: 'absolute', top: 12, right: 12, padding: 4, background: 'none', border: 'none', color: 'var(--text-muted)' }}><X size={14} /></button>
             <div style={{ fontWeight: 600, marginBottom: 8, fontSize: 13, color: 'var(--accent)' }}>AI Summary</div>
-            <div style={{ fontSize: 14, lineHeight: 1.7, whiteSpace: 'pre-wrap' }}>{summary}</div>
+            <div style={{ fontSize: 14, lineHeight: 1.7 }}><Markdown>{summary}</Markdown></div>
           </div>
         )}
       </div>

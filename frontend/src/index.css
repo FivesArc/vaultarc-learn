@@ -252,6 +252,21 @@ textarea { resize: vertical; min-height: 200px; }
 
 .divider { height: 1px; background: var(--border); margin: 20px 0; }
 
+/* Markdown rendered content */
+.qa-bubble p, .qa-bubble ul, .qa-bubble ol { margin-bottom: 8px; }
+.qa-bubble p:last-child, .qa-bubble ul:last-child { margin-bottom: 0; }
+.qa-bubble ul, .qa-bubble ol { padding-left: 20px; }
+.qa-bubble li { margin-bottom: 4px; }
+.qa-bubble strong { font-weight: 700; }
+.qa-bubble.user strong { color: rgba(255,255,255,0.95); }
+.qa-bubble code { background: rgba(0,0,0,0.08); padding: 1px 5px; border-radius: 4px; font-size: 13px; font-family: monospace; }
+.qa-bubble h1, .qa-bubble h2, .qa-bubble h3 { font-family: var(--font-serif); margin-bottom: 6px; margin-top: 12px; }
+
+.card p, .card ul, .card ol { margin-bottom: 6px; }
+.card ul, .card ol { padding-left: 18px; }
+.card li { margin-bottom: 3px; }
+.card strong { font-weight: 700; color: var(--text); }
+
 .flex { display: flex; }
 .gap-2 { gap: 8px; }
 .gap-3 { gap: 12px; }
