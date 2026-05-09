@@ -1,4 +1,5 @@
 const BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:8787'
+console.log('[API] BASE URL:', BASE)
 
 async function req<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(`${BASE}${path}`, {

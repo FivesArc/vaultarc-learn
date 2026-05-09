@@ -26,7 +26,9 @@ export default function AskPage() {
       const { answer } = await api.ask(selectedNoteId, q)
       setMessages((m) => [...m, { role: 'assistant', text: answer }])
     } catch (e: any) {
-      setMessages((m) => [...m, { role: 'assistant', text: `Error: ${e.message}` }])
+      console.error('Ask error:', e)
+      const msg = e.message || e.toString() || 'Network error — check browser console'
+      setMessages((m) => [...m, { role: 'assistant', text: `Error: ${msg}` }])
     } finally { setLoading(false) }
   }
 
