@@ -128,7 +128,7 @@ export default function NotesPage() {
                 {n.source_type === 'upload' && <span className="badge upload">uploaded</span>}
               </div>
               <div className="meta">
-                {n.content.slice(0, 120)}{n.content.length > 120 ? '…' : ''}
+                {n.content?.slice(0, 120)}{(n.content?.length ?? 0) > 120 ? '…' : ''}
               </div>
               <div className="meta" style={{ marginTop: 6 }}>
                 {new Date(n.updated_at).toLocaleDateString()}
