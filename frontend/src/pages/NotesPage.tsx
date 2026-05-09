@@ -39,6 +39,8 @@ export default function NotesPage() {
   const [showNewSubject, setShowNewSubject] = useState(false)
   const [editingSubject, setEditingSubject] = useState<string | null>(null)
   const [editingSubjectName, setEditingSubjectName] = useState('')
+  const [dragOverSubject, setDragOverSubject] = useState<string | null>(null)
+  const [noteSubjectId, setNoteSubjectId] = useState<string>('')
   const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const savedRef = useRef<{ title: string; content: string; tags: string } | null>(null)
 
@@ -108,6 +110,7 @@ export default function NotesPage() {
 
   async function openEdit(note: Note) {
     setSelected(note); setTitle(note.title); setContent(''); setTags(note.tags || '')
+    setNoteSubjectId(note.subject_id || '')
     setSummary(localStorage.getItem(`vaultarc-summary-${note.id}`) || '')
     setEli5(localStorage.getItem(`vaultarc-eli5-${note.id}`) || '')
     setConnections([])
@@ -117,6 +120,14 @@ export default function NotesPage() {
     const full = await api.notes.get(note.id)
     setContent(full.content)
     savedRef.current = { title: note.title, content: full.content, tags: note.tags || '' }
+  }
+
+  const [uncategorizedRefresh, setUncategorizedRefresh] = useState(0)
+
+  async function dropNoteOnSubject(noteId: string, subjectId: string) {
+    await api.notes.update(noteId, { subject_id: subjectId })
+    await loadSubjects()
+    setUncategorizedRefresh((n) => n + 1)
   }
 
   function openSubject(subject: Subject) {
@@ -252,9 +263,15 @@ export default function NotesPage() {
       {error && <div style={{ color: 'var(--danger)', marginBottom: 12, fontSize: 13 }}>{error}</div>}
       <div className="editor-area">
         <input placeholder="Note title…" value={title} onChange={(e) => handleTitleChange(e.target.value)} style={{ fontSize: 16, fontWeight: 600 }} />
-        <div style={{ position: 'relative' }}>
-          <Tag size={13} style={{ position: 'absolute', left: 14, top: 13, color: 'var(--text-muted)' }} />
-          <input placeholder="Tags (comma separated: biology, chapter1)" value={tags} onChange={(e) => handleTagsChange(e.target.value)} style={{ paddingLeft: 36, fontSize: 13 }} />
+        <div style={{ display: 'flex', gap: 12 }}>
+          <div style={{ position: 'relative', flex: 1 }}>
+            <Tag size={13} style={{ position: 'absolute', left: 14, top: 13, color: 'var(--text-muted)' }} />
+            <input placeholder="Tags (comma separated: biology, chapter1)" value={tags} onChange={(e) => handleTagsChange(e.target.value)} style={{ paddingLeft: 36, fontSize: 13 }} />
+          </div>
+          <select value={noteSubjectId} onChange={async (e) => { setNoteSubjectId(e.target.value); if (selected) { await api.notes.update(selected.id, { subject_id: e.target.value || null }); loadSubjects() } }} style={{ fontSize: 13, minWidth: 180, flexShrink: 0 }}>
+            <option value="">No subject</option>
+            {subjects.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
+          </select>
         </div>
         {tagList.length > 0 && (
           <div className="flex gap-2" style={{ flexWrap: 'wrap' }}>
@@ -405,24 +422,34 @@ export default function NotesPage() {
           <p>No subjects yet. Create one to organise your notes by topic or course.</p>
         </div>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 16, marginBottom: 32 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: 16, marginBottom: 32 }}>
           {subjects.map((s) => (
-            <div key={s.id} className="note-card" style={{ borderLeft: `4px solid ${s.color}`, cursor: 'pointer', position: 'relative' }} onClick={() => openSubject(s)}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
-                <Folder size={18} style={{ color: s.color, flexShrink: 0 }} />
-                {editingSubject === s.id ? (
-                  <div style={{ display: 'flex', gap: 6, flex: 1 }} onClick={(e) => e.stopPropagation()}>
-                    <input value={editingSubjectName} onChange={(e) => setEditingSubjectName(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && saveSubjectName(s.id)} style={{ flex: 1, fontSize: 13, padding: '4px 8px' }} autoFocus />
-                    <button onClick={() => saveSubjectName(s.id)} style={{ padding: 4, background: 'none', border: 'none', color: 'var(--success)', cursor: 'pointer' }}><Check size={14} /></button>
-                  </div>
-                ) : (
-                  <h3 style={{ fontSize: 14, fontWeight: 600, flex: 1 }}>{s.name}</h3>
-                )}
+            <div
+              key={s.id}
+              className="note-card"
+              style={{ borderTop: `4px solid ${s.color}`, cursor: 'pointer', outline: dragOverSubject === s.id ? `2px dashed ${s.color}` : 'none', background: dragOverSubject === s.id ? `${s.color}18` : undefined }}
+              onClick={() => openSubject(s)}
+              onDragOver={(e) => { e.preventDefault(); setDragOverSubject(s.id) }}
+              onDragLeave={() => setDragOverSubject(null)}
+              onDrop={(e) => { e.preventDefault(); setDragOverSubject(null); const noteId = e.dataTransfer.getData('noteId'); if (noteId) dropNoteOnSubject(noteId, s.id) }}
+            >
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, marginBottom: 8 }}>
+                <Folder size={20} style={{ color: s.color, flexShrink: 0, marginTop: 2 }} />
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  {editingSubject === s.id ? (
+                    <div style={{ display: 'flex', gap: 6 }} onClick={(e) => e.stopPropagation()}>
+                      <input value={editingSubjectName} onChange={(e) => setEditingSubjectName(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && saveSubjectName(s.id)} style={{ flex: 1, fontSize: 13, padding: '4px 8px' }} autoFocus />
+                      <button onClick={() => saveSubjectName(s.id)} style={{ padding: 4, background: 'none', border: 'none', color: 'var(--success)', cursor: 'pointer' }}><Check size={14} /></button>
+                    </div>
+                  ) : (
+                    <h3 style={{ fontSize: 14, fontWeight: 600, wordBreak: 'break-word' }}>{s.name}</h3>
+                  )}
+                  <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4 }}>{s.note_count} note{s.note_count !== 1 ? 's' : ''}</div>
+                </div>
               </div>
-              <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{s.note_count} note{s.note_count !== 1 ? 's' : ''}</div>
-              <div style={{ position: 'absolute', top: 10, right: 10, display: 'flex', gap: 4 }} onClick={(e) => e.stopPropagation()}>
-                <button onClick={() => { setEditingSubject(s.id); setEditingSubjectName(s.name) }} style={{ padding: 4, background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', opacity: 0.6 }}><Pencil size={12} /></button>
-                <button onClick={() => deleteSubject(s.id)} style={{ padding: 4, background: 'none', border: 'none', color: 'var(--danger)', cursor: 'pointer', opacity: 0.6 }}><Trash2 size={12} /></button>
+              <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end' }} onClick={(e) => e.stopPropagation()}>
+                <button onClick={() => { setEditingSubject(s.id); setEditingSubjectName(s.name) }} className="btn-ghost" style={{ fontSize: 11, padding: '3px 10px' }}><Pencil size={11} />Rename</button>
+                <button onClick={() => deleteSubject(s.id)} className="btn-danger" style={{ fontSize: 11, padding: '3px 10px' }}><Trash2 size={11} />Delete</button>
               </div>
             </div>
           ))}
@@ -430,7 +457,7 @@ export default function NotesPage() {
       )}
 
       {/* Uncategorized notes */}
-      <UncategorizedSection onOpen={openEdit} />
+      <UncategorizedSection key={uncategorizedRefresh} onOpen={openEdit} />
     </div>
   )
 }
@@ -455,9 +482,21 @@ function UncategorizedSection({ onOpen }: { onOpen: (n: Note) => void }) {
       {open && (
         <div className="note-list">
           {notes.map((n) => (
-            <div key={n.id} className="note-card" onClick={() => onOpen(n)}>
-              <h3>{n.title}</h3>
-              <div className="meta">{new Date(n.updated_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</div>
+            <div
+              key={n.id}
+              className="note-card"
+              draggable
+              onDragStart={(e) => e.dataTransfer.setData('noteId', n.id)}
+              onClick={() => onOpen(n)}
+              style={{ cursor: 'grab' }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span style={{ fontSize: 11, color: 'var(--text-muted)', userSelect: 'none' }}>⠿</span>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <h3>{n.title}</h3>
+                  <div className="meta">{new Date(n.updated_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</div>
+                </div>
+              </div>
             </div>
           ))}
         </div>
