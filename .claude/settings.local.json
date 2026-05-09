@@ -14,7 +14,8 @@
       "Bash(git --version)",
       "Bash(git add *)",
       "Bash(git commit -m 'Switch from Anthropic to Cloudflare Workers AI \\(free\\) *)",
-      "Bash(git push *)"
+      "Bash(git push *)",
+      "Bash(git commit -m ' *)"
     ]
   }
 }
