@@ -21,7 +21,12 @@ export async function runAI(ai: Ai, system: string, userMessage: string): Promis
       { role: 'user', content: userMessage },
     ],
     max_tokens: 2048,
-  }) as { response: string }
+  }) as any
 
-  return response.response ?? ''
+  // Handle different response shapes from CF Workers AI
+  if (typeof response === 'string') return response
+  if (typeof response?.response === 'string') return response.response
+  // If it returned a parsed object/array, re-serialize it so callers get a string
+  if (response?.response !== undefined) return JSON.stringify(response.response)
+  return JSON.stringify(response)
 }
