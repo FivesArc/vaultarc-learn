@@ -152,40 +152,31 @@ export default function NotesPage() {
         <button className="btn-ghost" onClick={goBack}>← Back</button>
       </div>
       {error && <div style={{ color: 'var(--danger)', marginBottom: 12, fontSize: 13 }}>{error}</div>}
-      <div style={{ display: 'flex', gap: 24, alignItems: 'flex-start' }}>
-        <div className="editor-area" style={{ flex: '1 1 0', minWidth: 0, maxWidth: summary ? 'calc(100% - 340px)' : '100%' }}>
-          <input placeholder="Note title…" value={title} onChange={(e) => handleTitleChange(e.target.value)} style={{ fontSize: 16, fontWeight: 600 }} />
-          <div style={{ position: 'relative' }}>
-            <Tag size={13} style={{ position: 'absolute', left: 14, top: 13, color: 'var(--text-muted)' }} />
-            <input placeholder="Tags (comma separated: biology, chapter1)" value={tags} onChange={(e) => handleTagsChange(e.target.value)} style={{ paddingLeft: 36, fontSize: 13 }} />
-          </div>
-          {tagList.length > 0 && (
-            <div className="flex gap-2" style={{ flexWrap: 'wrap' }}>
-              {tagList.map((t) => <span key={t} className="badge">{t}</span>)}
-            </div>
-          )}
-          <textarea placeholder="Write your notes here…" value={content} onChange={(e) => handleContentChange(e.target.value)} style={{ minHeight: 480, resize: 'vertical' }} />
-          <div className="editor-toolbar">
-            <button className="btn-primary" onClick={saveNote} disabled={loading}>{loading ? <span className="spinner" /> : 'Save Note'}</button>
-            {selected && <button className="btn-ghost" onClick={getSummary} disabled={summarising}><Sparkles size={13} />{summarising ? 'Summarising…' : 'Summarise'}</button>}
-            {selected && <button className="btn-ghost" onClick={exportNote}><Download size={13} />Export .md</button>}
-            {selected && <button className="btn-danger" onClick={() => deleteNote(selected.id)}><Trash2 size={13} />Delete</button>}
-          </div>
+      <div className="editor-area">
+        <input placeholder="Note title…" value={title} onChange={(e) => handleTitleChange(e.target.value)} style={{ fontSize: 16, fontWeight: 600 }} />
+        <div style={{ position: 'relative' }}>
+          <Tag size={13} style={{ position: 'absolute', left: 14, top: 13, color: 'var(--text-muted)' }} />
+          <input placeholder="Tags (comma separated: biology, chapter1)" value={tags} onChange={(e) => handleTagsChange(e.target.value)} style={{ paddingLeft: 36, fontSize: 13 }} />
         </div>
-        <div style={{ width: 320, flexShrink: 0, position: 'sticky', top: 16 }}>
-          {summary ? (
-            <div className="card" style={{ position: 'relative', top: 0 }}>
-              <button onClick={() => { setSummary(''); if (selected) localStorage.removeItem(`vaultarc-summary-${selected.id}`) }} style={{ position: 'absolute', top: 12, right: 12, padding: 4, background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}><X size={14} /></button>
-              <div style={{ fontWeight: 600, marginBottom: 8, fontSize: 13, color: 'var(--accent)' }}>AI Summary</div>
-              <div style={{ fontSize: 14, lineHeight: 1.7 }}><Markdown>{summary}</Markdown></div>
-            </div>
-          ) : (
-            <div style={{ border: '2px dashed var(--border)', borderRadius: 12, padding: '32px 20px', textAlign: 'center', color: 'var(--text-muted)', fontSize: 13 }}>
-              <Sparkles size={24} style={{ margin: '0 auto 10px', opacity: 0.4 }} />
-              <div>Click <strong>Summarise</strong> to generate an AI summary of this note</div>
-            </div>
-          )}
+        {tagList.length > 0 && (
+          <div className="flex gap-2" style={{ flexWrap: 'wrap' }}>
+            {tagList.map((t) => <span key={t} className="badge">{t}</span>)}
+          </div>
+        )}
+        <textarea placeholder="Write your notes here…" value={content} onChange={(e) => handleContentChange(e.target.value)} style={{ minHeight: 400, resize: 'vertical' }} />
+        <div className="editor-toolbar">
+          <button className="btn-primary" onClick={saveNote} disabled={loading}>{loading ? <span className="spinner" /> : 'Save Note'}</button>
+          {selected && <button className="btn-ghost" onClick={getSummary} disabled={summarising}><Sparkles size={13} />{summarising ? 'Summarising…' : 'Summarise'}</button>}
+          {selected && <button className="btn-ghost" onClick={exportNote}><Download size={13} />Export .md</button>}
+          {selected && <button className="btn-danger" onClick={() => deleteNote(selected.id)}><Trash2 size={13} />Delete</button>}
         </div>
+        {summary && (
+          <div className="card" style={{ position: 'relative' }}>
+            <button onClick={() => { setSummary(''); if (selected) localStorage.removeItem(`vaultarc-summary-${selected.id}`) }} style={{ position: 'absolute', top: 12, right: 12, padding: 4, background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}><X size={14} /></button>
+            <div style={{ fontWeight: 600, marginBottom: 8, fontSize: 13, color: 'var(--accent)' }}>AI Summary</div>
+            <div style={{ fontSize: 14, lineHeight: 1.7 }}><Markdown>{summary}</Markdown></div>
+          </div>
+        )}
       </div>
     </div>
   )
