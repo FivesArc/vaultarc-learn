@@ -60,7 +60,7 @@ export default function AskPage() {
         )}
       </div>
 
-      <div style={{ marginBottom: 20, maxWidth: 400 }}>
+      <div style={{ marginBottom: 20 }}>
         <select value={selectedNoteId} onChange={(e) => selectNote(e.target.value)}>
           <option value="">Select a note to ask about…</option>
           {notes.map((n) => <option key={n.id} value={n.id}>{n.title}</option>)}

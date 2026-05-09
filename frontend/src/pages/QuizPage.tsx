@@ -107,7 +107,7 @@ export default function QuizPage() {
         </div>
       </div>
 
-      <div style={{ maxWidth: 640 }}>
+      <div style={{ maxWidth: '100%' }}>
         {quiz?.questions.map((q, i) => {
           const userAns = (answers as number[])[i]
           const correct = q.correct
@@ -137,7 +137,7 @@ export default function QuizPage() {
         <button className="btn-ghost" onClick={reset}>← Back</button>
       </div>
       {error && <div style={{ color: 'var(--danger)', marginBottom: 12, fontSize: 13 }}>{error}</div>}
-      <div style={{ maxWidth: 640 }}>
+      <div style={{ maxWidth: '100%' }}>
         {quiz.questions.map((q, i) => (
           <div key={i} className="quiz-question">
             <p>{i + 1}. {q.question}</p>
@@ -176,7 +176,7 @@ export default function QuizPage() {
         </div>
       )}
 
-      <div className="card" style={{ maxWidth: 480, marginBottom: 24 }}>
+      <div className="card" style={{ marginBottom: 24 }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           <div>
             <label style={{ display: 'block', marginBottom: 6, fontSize: 13, color: 'var(--text-muted)' }}>Select Note</label>
@@ -203,7 +203,7 @@ export default function QuizPage() {
       </div>
 
       {showHistory && (
-        <div style={{ maxWidth: 480 }}>
+        <div>
           <div style={{ fontWeight: 600, fontSize: 14, marginBottom: 10 }}>Past Results</div>
           {history.length === 0 ? (
             <div className="text-muted">No quiz history yet for this note.</div>

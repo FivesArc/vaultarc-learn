@@ -88,13 +88,13 @@ export default function FlashcardsPage() {
             <button className="btn-ghost" onClick={reset}><RotateCcw size={13} />Exit</button>
           </div>
         </div>
-        <div onClick={() => setFlipped(!flipped)} style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16, padding: '60px 40px', textAlign: 'center', cursor: 'pointer', minHeight: 240, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', boxShadow: 'var(--shadow-md)', marginBottom: 20, maxWidth: 640 }}>
+        <div onClick={() => setFlipped(!flipped)} style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16, padding: '60px 40px', textAlign: 'center', cursor: 'pointer', minHeight: 240, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', boxShadow: 'var(--shadow-md)', marginBottom: 20, maxWidth: '100%' }}>
           <div style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: 1, color: 'var(--accent)', marginBottom: 16, fontWeight: 600 }}>{flipped ? 'Answer' : 'Question'}</div>
           <div style={{ fontSize: 18, fontWeight: 600, lineHeight: 1.5 }}>{flipped ? card.back : card.front}</div>
           <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 24 }}>{flipped ? 'How well did you know this?' : 'Click to reveal answer'}</div>
         </div>
         {flipped && (
-          <div className="flex gap-2" style={{ maxWidth: 640 }}>
+          <div className="flex gap-2" style={{ maxWidth: '100%' }}>
             <button onClick={() => handleRate(1)} style={{ flex: 1, justifyContent: 'center', background: 'rgba(184,64,64,0.1)', color: 'var(--danger)', border: '1px solid var(--danger)', borderRadius: 999, padding: '10px 0', fontWeight: 600, fontSize: 13 }}>Hard</button>
             <button onClick={() => handleRate(2)} style={{ flex: 1, justifyContent: 'center', background: 'rgba(184,160,64,0.1)', color: '#a07020', border: '1px solid #c8a040', borderRadius: 999, padding: '10px 0', fontWeight: 600, fontSize: 13 }}>OK</button>
             <button onClick={() => handleRate(3)} style={{ flex: 1, justifyContent: 'center', background: 'rgba(74,124,94,0.1)', color: 'var(--success)', border: '1px solid var(--success)', borderRadius: 999, padding: '10px 0', fontWeight: 600, fontSize: 13 }}>Easy</button>
@@ -116,16 +116,16 @@ export default function FlashcardsPage() {
             {dueCount > 0 && <button className="btn-primary" onClick={startReview}><Brain size={13} />Review {dueCount} due</button>}
           </div>
         </div>
-        <div onClick={() => setFlipped(!flipped)} style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16, padding: '60px 40px', textAlign: 'center', cursor: 'pointer', minHeight: 240, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', boxShadow: 'var(--shadow-md)', marginBottom: 20, maxWidth: 640 }}>
+        <div onClick={() => setFlipped(!flipped)} style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16, padding: '60px 40px', textAlign: 'center', cursor: 'pointer', minHeight: 240, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', boxShadow: 'var(--shadow-md)', marginBottom: 20, maxWidth: '100%' }}>
           <div style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: 1, color: 'var(--accent)', marginBottom: 16, fontWeight: 600 }}>{flipped ? 'Answer' : 'Question'}</div>
           <div style={{ fontSize: 18, fontWeight: 600, lineHeight: 1.5 }}>{flipped ? card.back : card.front}</div>
           <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 24 }}>Click to {flipped ? 'see question' : 'reveal answer'}</div>
         </div>
-        <div className="flex gap-2" style={{ maxWidth: 640, marginBottom: 20 }}>
+        <div className="flex gap-2" style={{ maxWidth: '100%', marginBottom: 20 }}>
           <button className="btn-ghost" onClick={prev} disabled={index === 0} style={{ flex: 1 }}><ChevronLeft size={16} />Previous</button>
           <button className="btn-primary" onClick={next} disabled={index === cards.length - 1} style={{ flex: 1, justifyContent: 'center' }}>Next<ChevronRight size={16} /></button>
         </div>
-        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', maxWidth: 640 }}>
+        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', maxWidth: '100%' }}>
           {cards.map((_, i) => (
             <div key={i} onClick={() => { setIndex(i); setFlipped(false) }} style={{ width: 28, height: 28, borderRadius: '50%', cursor: 'pointer', background: i === index ? 'var(--accent)' : 'var(--surface2)', border: `1px solid ${i === index ? 'var(--accent)' : 'var(--border)'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 600, color: i === index ? '#fff' : 'var(--text-muted)' }}>{i + 1}</div>
           ))}
@@ -138,7 +138,7 @@ export default function FlashcardsPage() {
     <div>
       <div className="page-header"><h2 className="page-title">Flashcards</h2></div>
       {error && <div style={{ color: 'var(--danger)', marginBottom: 12, fontSize: 13 }}>{error}</div>}
-      <div className="card" style={{ maxWidth: 480, marginBottom: 20 }}>
+      <div className="card" style={{ marginBottom: 20 }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           <div>
             <label style={{ display: 'block', marginBottom: 6, fontSize: 13, color: 'var(--text-muted)' }}>Select Note</label>

@@ -193,13 +193,13 @@ textarea { resize: vertical; min-height: 200px; }
 .editor-area { display: flex; flex-direction: column; gap: 14px; }
 .editor-toolbar { display: flex; gap: 8px; flex-wrap: wrap; }
 
-.qa-thread { display: flex; flex-direction: column; gap: 14px; max-width: 680px; }
+.qa-thread { display: flex; flex-direction: column; gap: 14px; }
 
 .qa-bubble { padding: 12px 16px; border-radius: 12px; line-height: 1.7; font-size: 14px; }
 .qa-bubble.user { background: var(--accent); color: #fff; align-self: flex-end; max-width: 80%; border-radius: 12px 12px 2px 12px; }
 .qa-bubble.assistant { background: var(--surface); border: 1px solid var(--border); max-width: 90%; box-shadow: var(--shadow); border-radius: 2px 12px 12px 12px; }
 
-.qa-input-row { display: flex; gap: 8px; margin-top: 8px; max-width: 680px; }
+.qa-input-row { display: flex; gap: 8px; margin-top: 8px; }
 .qa-input-row input { flex: 1; border-radius: 999px; padding: 10px 18px; }
 
 .quiz-question { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; margin-bottom: 12px; box-shadow: var(--shadow); }
