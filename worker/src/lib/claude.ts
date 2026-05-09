@@ -26,6 +26,6 @@ export async function callClaude(
     throw new Error(`Claude API error: ${err}`)
   }
 
-  const data = await res.json<{ content: Array<{ type: string; text: string }> }>()
+  const data = await res.json() as { content: Array<{ type: string; text: string }> }
   return data.content[0]?.text ?? ''
 }
