@@ -12,12 +12,21 @@ async function req<T>(path: string, init?: RequestInit): Promise<T> {
   return res.json() as Promise<T>
 }
 
+export type Subject = {
+  id: string
+  name: string
+  color: string
+  created_at: number
+  note_count: number
+}
+
 export type Note = {
   id: string
   title: string
   content: string
   source_type: 'text' | 'upload'
   tags?: string
+  subject_id?: string | null
   created_at: number
   updated_at: number
 }
@@ -61,20 +70,29 @@ export type ProgressResult = {
 
 export const api = {
   notes: {
-    list: (q?: string, tag?: string) => {
+    list: (q?: string, tag?: string, subject_id?: string) => {
       const params = new URLSearchParams()
       if (q) params.set('q', q)
       if (tag) params.set('tag', tag)
+      if (subject_id) params.set('subject_id', subject_id)
       const qs = params.toString()
       return req<Note[]>(`/notes${qs ? `?${qs}` : ''}`)
     },
     get: (id: string) => req<Note>(`/notes/${id}`),
     tags: () => req<string[]>('/notes/tags'),
-    create: (title: string, content: string, tags = '') =>
-      req<Note>('/notes', { method: 'POST', body: JSON.stringify({ title, content, tags }) }),
-    update: (id: string, data: Partial<Pick<Note, 'title' | 'content' | 'tags'>>) =>
+    create: (title: string, content: string, tags = '', subject_id?: string) =>
+      req<Note>('/notes', { method: 'POST', body: JSON.stringify({ title, content, tags, subject_id }) }),
+    update: (id: string, data: Partial<Pick<Note, 'title' | 'content' | 'tags' | 'subject_id'>>) =>
       req<Note>(`/notes/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
     delete: (id: string) => req<{ ok: boolean }>(`/notes/${id}`, { method: 'DELETE' }),
+  },
+  subjects: {
+    list: () => req<Subject[]>('/subjects'),
+    create: (name: string, color?: string) =>
+      req<Subject>('/subjects', { method: 'POST', body: JSON.stringify({ name, color }) }),
+    update: (id: string, data: Partial<Pick<Subject, 'name' | 'color'>>) =>
+      req<Subject>(`/subjects/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+    delete: (id: string) => req<{ ok: boolean }>(`/subjects/${id}`, { method: 'DELETE' }),
   },
   upload: (file: File, title?: string) => {
     const fd = new FormData()

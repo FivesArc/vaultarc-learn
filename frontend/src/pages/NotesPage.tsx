@@ -1,15 +1,19 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { api } from '../lib/api'
-import type { Note } from '../lib/api'
-import { FileText, Plus, Upload, Trash2, Search, Sparkles, X, Download, Tag, Lightbulb, Link2, BookOpen } from 'lucide-react'
+import type { Note, Subject } from '../lib/api'
+import { FileText, Plus, Upload, Trash2, Search, Sparkles, X, Download, Tag, Lightbulb, Link2, BookOpen, FolderOpen, Folder, Pencil, Check } from 'lucide-react'
 import Markdown from 'react-markdown'
 import { recordAction } from '../lib/gamification'
 
-type View = 'list' | 'new' | 'edit' | 'upload'
+type View = 'subjects' | 'list' | 'new' | 'edit' | 'upload'
+
+const SUBJECT_COLORS = ['#b87040', '#4a7c5e', '#6a9ec4', '#9b59b6', '#e67e22', '#e74c3c', '#1abc9c', '#3498db']
 
 export default function NotesPage() {
-  const [view, setView] = useState<View>('list')
+  const [view, setView] = useState<View>('subjects')
   const [notes, setNotes] = useState<Note[]>([])
+  const [subjects, setSubjects] = useState<Subject[]>([])
+  const [activeSubject, setActiveSubject] = useState<Subject | null>(null)
   const [selected, setSelected] = useState<Note | null>(null)
   const [loading, setLoading] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -29,18 +33,30 @@ export default function NotesPage() {
   const [title, setTitle] = useState('')
   const [content, setContent] = useState('')
   const [tags, setTags] = useState('')
+  // New subject form
+  const [newSubjectName, setNewSubjectName] = useState('')
+  const [newSubjectColor, setNewSubjectColor] = useState(SUBJECT_COLORS[0])
+  const [showNewSubject, setShowNewSubject] = useState(false)
+  const [editingSubject, setEditingSubject] = useState<string | null>(null)
+  const [editingSubjectName, setEditingSubjectName] = useState('')
   const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const savedRef = useRef<{ title: string; content: string; tags: string } | null>(null)
 
-  useEffect(() => { loadNotes(); loadTags() }, [])
+  useEffect(() => { loadSubjects(); loadTags() }, [])
 
   useEffect(() => {
     const handler = setTimeout(() => loadNotes(search, activeTag), 300)
     return () => clearTimeout(handler)
-  }, [search, activeTag])
+  }, [search, activeTag, activeSubject])
+
+  async function loadSubjects() {
+    try { setSubjects(await api.subjects.list()) } catch {}
+  }
 
   async function loadNotes(q?: string, tag?: string) {
-    try { setNotes(await api.notes.list(q, tag)) } catch { setError('Failed to load notes') }
+    try {
+      setNotes(await api.notes.list(q, tag, activeSubject?.id))
+    } catch { setError('Failed to load notes') }
   }
 
   async function loadTags() {
@@ -71,20 +87,21 @@ export default function NotesPage() {
       if (selected) {
         await api.notes.update(selected.id, { title, content, tags })
       } else {
-        await api.notes.create(title, content, tags)
+        await api.notes.create(title, content, tags, activeSubject?.id)
       }
-      await loadNotes(); await loadTags(); goBack()
+      await loadNotes(); await loadTags(); await loadSubjects(); goBack()
     } catch { setError('Failed to save note') } finally { setLoading(false) }
   }
 
   async function deleteNote(id: string) {
     if (!confirm('Delete this note?')) return
     await api.notes.delete(id)
-    loadNotes(); loadTags(); goBack()
+    loadNotes(); loadTags(); loadSubjects(); goBack()
   }
 
   function goBack() {
-    setView('list'); setSelected(null); setTitle(''); setContent(''); setTags('')
+    setView(activeSubject ? 'list' : 'subjects')
+    setSelected(null); setTitle(''); setContent(''); setTags('')
     setSummary(''); setEli5(''); setConnections([]); setKeyterms([])
     savedRef.current = null
   }
@@ -102,6 +119,42 @@ export default function NotesPage() {
     savedRef.current = { title: note.title, content: full.content, tags: note.tags || '' }
   }
 
+  function openSubject(subject: Subject) {
+    setActiveSubject(subject)
+    setSearch('')
+    setActiveTag('')
+    setView('list')
+  }
+
+  function goToSubjects() {
+    setActiveSubject(null)
+    setSearch('')
+    setActiveTag('')
+    setView('subjects')
+  }
+
+  async function createSubject() {
+    if (!newSubjectName.trim()) return
+    const s = await api.subjects.create(newSubjectName.trim(), newSubjectColor)
+    setSubjects([...subjects, s])
+    setNewSubjectName('')
+    setShowNewSubject(false)
+  }
+
+  async function deleteSubject(id: string) {
+    if (!confirm('Delete this subject? Notes will become uncategorized.')) return
+    await api.subjects.delete(id)
+    loadSubjects()
+    if (activeSubject?.id === id) goToSubjects()
+  }
+
+  async function saveSubjectName(id: string) {
+    if (!editingSubjectName.trim()) return
+    await api.subjects.update(id, { name: editingSubjectName.trim() })
+    setSubjects(subjects.map((s) => s.id === id ? { ...s, name: editingSubjectName.trim() } : s))
+    setEditingSubject(null)
+  }
+
   async function getSummary() {
     if (!selected) return
     setSummarising(true)
@@ -109,8 +162,7 @@ export default function NotesPage() {
       const { summary: s } = await api.summary(selected.id)
       setSummary(s)
       localStorage.setItem(`vaultarc-summary-${selected.id}`, s)
-    }
-    catch (e: any) { setError(e.message) } finally { setSummarising(false) }
+    } catch (e: any) { setError(e.message) } finally { setSummarising(false) }
   }
 
   async function getEli5() {
@@ -121,8 +173,7 @@ export default function NotesPage() {
       setEli5(explanation)
       localStorage.setItem(`vaultarc-eli5-${selected.id}`, explanation)
       recordAction('eli5')
-    }
-    catch (e: any) { setError(e.message) } finally { setEli5ing(false) }
+    } catch (e: any) { setError(e.message) } finally { setEli5ing(false) }
   }
 
   async function getConnections() {
@@ -132,8 +183,7 @@ export default function NotesPage() {
       const { connections: c } = await api.connections(selected.id)
       setConnections(c)
       recordAction('connections')
-    }
-    catch (e: any) { setError(e.message) } finally { setConnecting(false) }
+    } catch (e: any) { setError(e.message) } finally { setConnecting(false) }
   }
 
   async function getKeyterms() {
@@ -143,8 +193,7 @@ export default function NotesPage() {
       const { terms } = await api.keyterms(selected.id)
       setKeyterms(terms)
       localStorage.setItem(`vaultarc-keyterms-${selected.id}`, JSON.stringify(terms))
-    }
-    catch (e: any) { setError(e.message) } finally { setKeytermsLoading(false) }
+    } catch (e: any) { setError(e.message) } finally { setKeytermsLoading(false) }
   }
 
   function exportNote() {
@@ -157,17 +206,18 @@ export default function NotesPage() {
 
   async function handleFileDrop(file: File) {
     setLoading(true)
-    try { await api.upload(file); await loadNotes(); setView('list') }
+    try { await api.upload(file); await loadNotes(); await loadSubjects(); setView(activeSubject ? 'list' : 'subjects') }
     catch (e: any) { setError(e.message || 'Upload failed') } finally { setLoading(false) }
   }
 
   const tagList = tags.split(',').map((t) => t.trim()).filter(Boolean)
 
+  // ── Upload view ──────────────────────────────────────────────────────────
   if (view === 'upload') return (
     <div>
       <div className="page-header">
         <h2 className="page-title">Upload Notes</h2>
-        <button className="btn-ghost" onClick={() => setView('list')}>← Back</button>
+        <button className="btn-ghost" onClick={() => setView(activeSubject ? 'list' : 'subjects')}>← Back</button>
       </div>
       {error && <div style={{ color: 'var(--danger)', marginBottom: 12, fontSize: 13 }}>{error}</div>}
       <div style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 16, padding: '10px 14px', background: 'var(--accent-light)', borderRadius: 8, border: '1px solid rgba(184,112,64,0.2)' }}>
@@ -189,6 +239,7 @@ export default function NotesPage() {
     </div>
   )
 
+  // ── Edit / New view ──────────────────────────────────────────────────────
   if (view === 'new' || view === 'edit') return (
     <div>
       <div className="page-header">
@@ -214,7 +265,7 @@ export default function NotesPage() {
         <div className="editor-toolbar">
           <button className="btn-primary" onClick={saveNote} disabled={loading}>{loading ? <span className="spinner" /> : 'Save Note'}</button>
           {selected && <button className="btn-ghost" onClick={getSummary} disabled={summarising}><Sparkles size={13} />{summarising ? 'Summarising…' : 'Summarise'}</button>}
-          {selected && <button className="btn-ghost" onClick={getEli5} disabled={eli5ing} title="Explain it simply with real-world analogies"><Lightbulb size={13} />{eli5ing ? 'Simplifying…' : 'ELI5'}</button>}
+          {selected && <button className="btn-ghost" onClick={getEli5} disabled={eli5ing}><Lightbulb size={13} />{eli5ing ? 'Simplifying…' : 'ELI5'}</button>}
           {selected && <button className="btn-ghost" onClick={getKeyterms} disabled={keytermsLoading}><BookOpen size={13} />{keytermsLoading ? '…' : 'Key Terms'}</button>}
           {selected && <button className="btn-ghost" onClick={getConnections} disabled={connecting}><Link2 size={13} />{connecting ? 'Finding…' : 'Connections'}</button>}
           {selected && <button className="btn-ghost" onClick={exportNote}><Download size={13} />Export .md</button>}
@@ -238,9 +289,6 @@ export default function NotesPage() {
             </div>
           </div>
         )}
-        {connections.length === 0 && connecting === false && selected && (
-          null
-        )}
 
         {summary && (
           <div className="card" style={{ position: 'relative' }}>
@@ -261,10 +309,17 @@ export default function NotesPage() {
     </div>
   )
 
-  return (
+  // ── Notes list view (inside a subject) ───────────────────────────────────
+  if (view === 'list') return (
     <div>
       <div className="page-header">
-        <h2 className="page-title">My Notes</h2>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <button className="btn-ghost" onClick={goToSubjects} style={{ padding: '5px 12px', fontSize: 13 }}>← Subjects</button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <div style={{ width: 10, height: 10, borderRadius: '50%', background: activeSubject?.color }} />
+            <h2 className="page-title">{activeSubject?.name ?? 'All Notes'}</h2>
+          </div>
+        </div>
         <div className="flex gap-2">
           <button className="btn-ghost" onClick={() => setView('upload')}><Upload size={13} />Upload</button>
           <button className="btn-primary" onClick={() => { setTitle(''); setContent(''); setTags(''); setSelected(null); setView('new') }}><Plus size={13} />New Note</button>
@@ -301,6 +356,107 @@ export default function NotesPage() {
                   {n.tags.split(',').map((t) => t.trim()).filter(Boolean).map((t) => <span key={t} className="badge">{t}</span>)}
                 </div>
               )}
+              <div className="meta">{new Date(n.updated_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+
+  // ── Subjects home view ───────────────────────────────────────────────────
+  return (
+    <div>
+      <div className="page-header">
+        <h2 className="page-title">My Notes</h2>
+        <div className="flex gap-2">
+          <button className="btn-ghost" onClick={() => setView('upload')}><Upload size={13} />Upload</button>
+          <button className="btn-primary" onClick={() => setShowNewSubject(true)}><Plus size={13} />New Subject</button>
+        </div>
+      </div>
+
+      {error && <div style={{ color: 'var(--danger)', marginBottom: 12, fontSize: 13 }}>{error}</div>}
+
+      {/* New subject form */}
+      {showNewSubject && (
+        <div className="card" style={{ marginBottom: 24 }}>
+          <div style={{ fontWeight: 600, fontSize: 14, marginBottom: 12 }}>Create New Subject</div>
+          <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'flex-end' }}>
+            <div style={{ flex: 1, minWidth: 200 }}>
+              <input placeholder="Subject name (e.g. CompTIA Security+)" value={newSubjectName} onChange={(e) => setNewSubjectName(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && createSubject()} autoFocus />
+            </div>
+            <div style={{ display: 'flex', gap: 6 }}>
+              {SUBJECT_COLORS.map((c) => (
+                <button key={c} onClick={() => setNewSubjectColor(c)} style={{ width: 24, height: 24, borderRadius: '50%', background: c, border: newSubjectColor === c ? '3px solid var(--text)' : '2px solid transparent', padding: 0, cursor: 'pointer' }} />
+              ))}
+            </div>
+            <div className="flex gap-2">
+              <button className="btn-primary" onClick={createSubject} disabled={!newSubjectName.trim()}>Create</button>
+              <button className="btn-ghost" onClick={() => { setShowNewSubject(false); setNewSubjectName('') }}>Cancel</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Subject grid */}
+      {subjects.length === 0 && !showNewSubject ? (
+        <div className="empty-state">
+          <FolderOpen size={36} style={{ margin: '0 auto', opacity: 0.4 }} />
+          <p>No subjects yet. Create one to organise your notes by topic or course.</p>
+        </div>
+      ) : (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 16, marginBottom: 32 }}>
+          {subjects.map((s) => (
+            <div key={s.id} className="note-card" style={{ borderLeft: `4px solid ${s.color}`, cursor: 'pointer', position: 'relative' }} onClick={() => openSubject(s)}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
+                <Folder size={18} style={{ color: s.color, flexShrink: 0 }} />
+                {editingSubject === s.id ? (
+                  <div style={{ display: 'flex', gap: 6, flex: 1 }} onClick={(e) => e.stopPropagation()}>
+                    <input value={editingSubjectName} onChange={(e) => setEditingSubjectName(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && saveSubjectName(s.id)} style={{ flex: 1, fontSize: 13, padding: '4px 8px' }} autoFocus />
+                    <button onClick={() => saveSubjectName(s.id)} style={{ padding: 4, background: 'none', border: 'none', color: 'var(--success)', cursor: 'pointer' }}><Check size={14} /></button>
+                  </div>
+                ) : (
+                  <h3 style={{ fontSize: 14, fontWeight: 600, flex: 1 }}>{s.name}</h3>
+                )}
+              </div>
+              <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{s.note_count} note{s.note_count !== 1 ? 's' : ''}</div>
+              <div style={{ position: 'absolute', top: 10, right: 10, display: 'flex', gap: 4 }} onClick={(e) => e.stopPropagation()}>
+                <button onClick={() => { setEditingSubject(s.id); setEditingSubjectName(s.name) }} style={{ padding: 4, background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', opacity: 0.6 }}><Pencil size={12} /></button>
+                <button onClick={() => deleteSubject(s.id)} style={{ padding: 4, background: 'none', border: 'none', color: 'var(--danger)', cursor: 'pointer', opacity: 0.6 }}><Trash2 size={12} /></button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Uncategorized notes */}
+      <UncategorizedSection onOpen={openEdit} />
+    </div>
+  )
+}
+
+function UncategorizedSection({ onOpen }: { onOpen: (n: Note) => void }) {
+  const [notes, setNotes] = useState<Note[]>([])
+  const [open, setOpen] = useState(false)
+
+  useEffect(() => {
+    api.notes.list(undefined, undefined, 'none').then(setNotes).catch(() => {})
+  }, [])
+
+  if (notes.length === 0) return null
+
+  return (
+    <div>
+      <button onClick={() => setOpen(!open)} style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', fontSize: 13, fontWeight: 600, marginBottom: 12, padding: 0 }}>
+        <FileText size={14} />
+        Uncategorized ({notes.length})
+        <span style={{ fontSize: 11 }}>{open ? '▲' : '▼'}</span>
+      </button>
+      {open && (
+        <div className="note-list">
+          {notes.map((n) => (
+            <div key={n.id} className="note-card" onClick={() => onOpen(n)}>
+              <h3>{n.title}</h3>
               <div className="meta">{new Date(n.updated_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</div>
             </div>
           ))}

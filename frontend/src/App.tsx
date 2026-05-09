@@ -45,13 +45,13 @@ export default function App() {
         {sidebarOpen && <div className="sidebar-overlay" onClick={() => setSidebarOpen(false)} />}
 
         <aside className={`sidebar${sidebarOpen ? ' open' : ''}`}>
-          <div className="sidebar-header">
+          <div className="sidebar-header" style={{ cursor: 'pointer' }} onClick={() => navigate('notes')}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
               <div>
                 <div className="sidebar-brand">VaultArc <span>Learn</span></div>
                 <div className="sidebar-sub">AI Study Companion</div>
               </div>
-              <button className="mobile-close" onClick={() => setSidebarOpen(false)}><X size={16} /></button>
+              <button className="mobile-close" onClick={(e) => { e.stopPropagation(); setSidebarOpen(false) }}><X size={16} /></button>
             </div>
           </div>
           <nav className="sidebar-nav">

@@ -7,6 +7,7 @@ import { uploads } from './routes/uploads'
 import { summary } from './routes/summary'
 import { flashcards } from './routes/flashcards'
 import { eli5 } from './routes/eli5'
+import { subjects } from './routes/subjects'
 import { scenario } from './routes/scenario'
 import { progress } from './routes/progress'
 import { connections } from './routes/connections'
@@ -38,6 +39,7 @@ app.route('/uploads', uploads)
 app.route('/summary', summary)
 app.route('/flashcards', flashcards)
 app.route('/eli5', eli5)
+app.route('/subjects', subjects)
 app.route('/scenario', scenario)
 app.route('/progress', progress)
 app.route('/connections', connections)
