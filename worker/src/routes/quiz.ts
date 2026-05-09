@@ -10,51 +10,59 @@ type Question = {
   explanation: string
 }
 
+function parseQuestions(raw: string): Question[] {
+  // Strip markdown code fences
+  let cleaned = raw.replace(/```(?:json)?/gi, '').replace(/```/g, '').trim()
+  // Extract JSON array
+  const match = cleaned.match(/\[[\s\S]*\]/)
+  if (match) cleaned = match[0]
+  return JSON.parse(cleaned)
+}
+
 export const quiz = new Hono<{ Bindings: Env }>()
 
 quiz.post('/generate', async (c) => {
-  const { note_id, count = 5 } = await c.req.json<{ note_id: string; count?: number }>()
-  if (!note_id) return c.json({ error: 'note_id required' }, 400)
-
-  const note = await c.env.DB.prepare('SELECT title, content FROM notes WHERE id = ?')
-    .bind(note_id)
-    .first<{ title: string; content: string }>()
-
-  if (!note) return c.json({ error: 'Note not found' }, 404)
-
-  const system = `You are a quiz generator. Generate exactly ${count} multiple choice questions based on the provided notes. Return ONLY valid JSON — no markdown, no explanation.
-
-Format:
-[
-  {
-    "question": "...",
-    "options": ["A", "B", "C", "D"],
-    "correct": 0,
-    "explanation": "..."
-  }
-]
-
-"correct" is the 0-based index of the correct option.`
-
-  const raw = await runAI(c.env.AI, system, note.content)
-
-  let questions: Question[]
   try {
-    const match = raw.match(/\[[\s\S]*\]/)
-    questions = JSON.parse(match ? match[0] : raw)
-  } catch {
-    return c.json({ error: 'Failed to parse quiz questions' }, 500)
+    const { note_id, count = 5 } = await c.req.json<{ note_id: string; count?: number }>()
+    if (!note_id) return c.json({ error: 'note_id required' }, 400)
+
+    const note = await c.env.DB.prepare('SELECT title, content FROM notes WHERE id = ?')
+      .bind(note_id)
+      .first<{ title: string; content: string }>()
+
+    if (!note) return c.json({ error: 'Note not found' }, 404)
+    if (!note.content?.trim()) return c.json({ error: 'Note has no content to generate a quiz from' }, 400)
+
+    const system = `You are a quiz generator. Output ONLY a raw JSON array, no markdown, no explanation, no code fences.
+
+Generate ${count} multiple choice questions from the notes. Each question must have exactly 4 options.
+
+Output format (raw JSON array only):
+[{"question":"...","options":["option1","option2","option3","option4"],"correct":0,"explanation":"..."}]
+
+"correct" is the 0-based index of the correct answer.`
+
+    const raw = await runAI(c.env.AI, system, note.content)
+
+    let questions: Question[]
+    try {
+      questions = parseQuestions(raw)
+    } catch {
+      return c.json({ error: `Failed to parse quiz. AI returned: ${raw.slice(0, 200)}` }, 500)
+    }
+
+    const id = nanoid()
+    const now = Date.now()
+    await c.env.DB.prepare(
+      'INSERT INTO quizzes (id, note_id, title, questions, created_at) VALUES (?, ?, ?, ?, ?)',
+    )
+      .bind(id, note_id, `Quiz: ${note.title}`, JSON.stringify(questions), now)
+      .run()
+
+    return c.json({ id, note_id, title: `Quiz: ${note.title}`, questions, created_at: now }, 201)
+  } catch (e: any) {
+    return c.json({ error: e.message ?? 'Internal error' }, 500)
   }
-
-  const id = nanoid()
-  const now = Date.now()
-  await c.env.DB.prepare(
-    'INSERT INTO quizzes (id, note_id, title, questions, created_at) VALUES (?, ?, ?, ?, ?)',
-  )
-    .bind(id, note_id, `Quiz: ${note.title}`, JSON.stringify(questions), now)
-    .run()
-
-  return c.json({ id, note_id, title: `Quiz: ${note.title}`, questions, created_at: now }, 201)
 })
 
 quiz.get('/note/:note_id', async (c) => {
@@ -67,11 +75,11 @@ quiz.get('/note/:note_id', async (c) => {
 })
 
 quiz.get('/:id', async (c) => {
-  const quiz = await c.env.DB.prepare('SELECT * FROM quizzes WHERE id = ?')
+  const row = await c.env.DB.prepare('SELECT * FROM quizzes WHERE id = ?')
     .bind(c.req.param('id'))
     .first<{ id: string; questions: string }>()
-  if (!quiz) return c.json({ error: 'Not found' }, 404)
-  return c.json({ ...quiz, questions: JSON.parse(quiz.questions) })
+  if (!row) return c.json({ error: 'Not found' }, 404)
+  return c.json({ ...row, questions: JSON.parse(row.questions) })
 })
 
 quiz.post('/:id/submit', async (c) => {

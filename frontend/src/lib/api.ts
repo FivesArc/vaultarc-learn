@@ -1,5 +1,4 @@
 const BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:8787'
-console.log('[API] BASE URL:', BASE)
 
 async function req<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(`${BASE}${path}`, {
@@ -18,6 +17,7 @@ export type Note = {
   title: string
   content: string
   source_type: 'text' | 'upload'
+  tags?: string
   created_at: number
   updated_at: number
 }
@@ -44,9 +44,11 @@ export type QuizResult = {
   percent: number
 }
 
+export type Flashcard = { front: string; back: string }
+
 export const api = {
   notes: {
-    list: () => req<Note[]>('/notes'),
+    list: (q?: string) => req<Note[]>(`/notes${q ? `?q=${encodeURIComponent(q)}` : ''}`),
     get: (id: string) => req<Note>(`/notes/${id}`),
     create: (title: string, content: string) =>
       req<Note>('/notes', { method: 'POST', body: JSON.stringify({ title, content }) }),
@@ -65,6 +67,15 @@ export const api = {
       method: 'POST',
       body: JSON.stringify({ note_id, question }),
     }),
+  summary: (note_id: string) =>
+    req<{ summary: string }>('/summary', { method: 'POST', body: JSON.stringify({ note_id }) }),
+  flashcards: {
+    generate: (note_id: string, count = 10) =>
+      req<{ note_id: string; cards: Flashcard[] }>('/flashcards/generate', {
+        method: 'POST',
+        body: JSON.stringify({ note_id, count }),
+      }),
+  },
   quiz: {
     generate: (note_id: string, count = 5) =>
       req<Quiz>('/quiz/generate', { method: 'POST', body: JSON.stringify({ note_id, count }) }),
@@ -72,5 +83,25 @@ export const api = {
     listForNote: (note_id: string) => req<Quiz[]>(`/quiz/note/${note_id}`),
     submit: (quiz_id: string, answers: number[]) =>
       req<QuizResult>(`/quiz/${quiz_id}/submit`, { method: 'POST', body: JSON.stringify({ answers }) }),
+    results: (quiz_id: string) => req<QuizResult[]>(`/quiz/${quiz_id}/results`),
   },
+}
+
+// localStorage helpers for chat history
+const CHAT_KEY = 'vaultarc-chat'
+export type Message = { role: 'user' | 'assistant'; text: string }
+
+export function loadChatHistory(note_id: string): Message[] {
+  try {
+    const raw = localStorage.getItem(`${CHAT_KEY}-${note_id}`)
+    return raw ? JSON.parse(raw) : []
+  } catch { return [] }
+}
+
+export function saveChatHistory(note_id: string, messages: Message[]) {
+  localStorage.setItem(`${CHAT_KEY}-${note_id}`, JSON.stringify(messages.slice(-50)))
+}
+
+export function clearChatHistory(note_id: string) {
+  localStorage.removeItem(`${CHAT_KEY}-${note_id}`)
 }

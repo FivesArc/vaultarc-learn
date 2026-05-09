@@ -5,6 +5,13 @@ import { nanoid } from '../lib/id'
 export const notes = new Hono<{ Bindings: Env }>()
 
 notes.get('/', async (c) => {
+  const q = c.req.query('q')
+  if (q) {
+    const { results } = await c.env.DB.prepare(
+      "SELECT id, title, source_type, created_at, updated_at FROM notes WHERE title LIKE ? OR content LIKE ? ORDER BY updated_at DESC",
+    ).bind(`%${q}%`, `%${q}%`).all()
+    return c.json(results)
+  }
   const { results } = await c.env.DB.prepare(
     'SELECT id, title, source_type, created_at, updated_at FROM notes ORDER BY updated_at DESC',
   ).all()

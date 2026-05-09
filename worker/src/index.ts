@@ -4,6 +4,8 @@ import { notes } from './routes/notes'
 import { ask } from './routes/ask'
 import { quiz } from './routes/quiz'
 import { uploads } from './routes/uploads'
+import { summary } from './routes/summary'
+import { flashcards } from './routes/flashcards'
 
 export type Env = {
   DB: D1Database
@@ -28,5 +30,7 @@ app.route('/notes', notes)
 app.route('/ask', ask)
 app.route('/quiz', quiz)
 app.route('/uploads', uploads)
+app.route('/summary', summary)
+app.route('/flashcards', flashcards)
 
 export default app
