@@ -6,6 +6,7 @@ export async function runAI(ai: Ai, system: string, userMessage: string): Promis
       { role: 'system', content: system },
       { role: 'user', content: userMessage },
     ],
+    max_tokens: 2048,
   }) as { response: string }
 
   return response.response ?? ''
