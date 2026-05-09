@@ -13,4 +13,4 @@ binding = "FILES"
 bucket_name = "vaultarc-learn-files"
 
 [vars]
-FRONTEND_URL = "http://localhost:5173"
+FRONTEND_URL = "https://vaultarc-learn.pages.dev"
