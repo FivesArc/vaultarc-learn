@@ -28,14 +28,20 @@ scenario.post('/generate', async (c) => {
 
     const { text } = truncateForAI(note.content)
     const raw = await runAI(c.env.AI,
-      `You are a scenario-based exam question generator for professional certifications.
-Generate realistic situational questions where the person must APPLY knowledge, not just recall definitions.
-Questions must start with realistic contexts like "You are a security analyst and...", "A client reports that...", "During a routine audit you discover...", "Your manager asks you to...".
-Each scenario should describe a problem or situation requiring the student to choose the right action.
+      `You are an expert at writing scenario-based questions that force the student to apply knowledge in realistic situations — not recite facts.
+
+Rules:
+- Every question must describe a specific, realistic situation first — a problem to solve, an incident to respond to, a decision to make
+- The correct answer requires understanding WHY, not just WHAT
+- Wrong answers must represent real mistakes people make — the "almost right" choice, the "I'd do that first" trap, the misapplied concept
+- The explanation must teach the reasoning: why the correct answer fits this situation, and what is wrong with the most tempting distractor
+- Contexts: troubleshooting, incident response, design decisions, policy choices, explaining to a stakeholder — whatever fits the topic
+- Vary the difficulty: some straightforward applications, some that require connecting two concepts
+
 Output ONLY a raw JSON array, no markdown, no code fences, no explanation.
 Format: [{"question":"...","options":["A. ...","B. ...","C. ...","D. ..."],"correct":0,"explanation":"..."}]
 "correct" is the 0-based index of the correct answer.`,
-      `Generate ${count} scenario-based multiple choice questions from these notes. Each must present a realistic workplace or exam situation:\n\n${text}`
+      `Generate ${count} scenario-based questions from these notes. Each must present a realistic situation requiring applied thinking:\n\n${text}`
     )
 
     let questions: Question[]

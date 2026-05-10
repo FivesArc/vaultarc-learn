@@ -33,13 +33,18 @@ quiz.post('/generate', async (c) => {
     if (!note) return c.json({ error: 'Note not found' }, 404)
     if (!note.content?.trim()) return c.json({ error: 'Note has no content to generate a quiz from' }, 400)
 
-    const system = `You are a quiz generator. Output ONLY a raw JSON array, no markdown, no explanation, no code fences.
+    const system = `You are an expert at writing quiz questions that test real understanding, not just memorisation.
 
-Generate ${count} multiple choice questions from the notes. Each question must have exactly 4 options.
+Rules for every question:
+- Test comprehension and application — ask "why does X happen", "what would you do if", "what is the difference between" — not just "what is the definition of"
+- Wrong answers (distractors) must be plausible — common misconceptions, related concepts, or things that sound right but aren't. Never use obviously wrong answers.
+- The explanation must teach: explain WHY the correct answer is right AND why the most tempting wrong answer is wrong
+- Mix question types: some definitions, some cause-effect, some comparisons, some "what happens if"
+- Questions should cover the most important concepts from the notes, not trivia
 
-Output format (raw JSON array only):
-[{"question":"...","options":["option1","option2","option3","option4"],"correct":0,"explanation":"..."}]
-
+Generate ${count} multiple choice questions. Each must have exactly 4 options.
+Output ONLY a raw JSON array, no markdown, no code fences.
+Format: [{"question":"...","options":["option1","option2","option3","option4"],"correct":0,"explanation":"..."}]
 "correct" is the 0-based index of the correct answer.`
 
     const { text: noteText } = truncateForAI(note.content)
@@ -68,7 +73,7 @@ Output format (raw JSON array only):
 
 quiz.get('/note/:note_id', async (c) => {
   const { results } = await c.env.DB.prepare(
-    'SELECT id, title, created_at FROM quizzes WHERE note_id = ? ORDER BY created_at DESC',
+    'SELECT id, title, questions, created_at FROM quizzes WHERE note_id = ? ORDER BY created_at DESC',
   )
     .bind(c.req.param('note_id'))
     .all()
@@ -107,6 +112,13 @@ quiz.post('/:id/submit', async (c) => {
   return c.json({ id, score, total: questions.length, percent: Math.round((score / questions.length) * 100) })
 })
 
+quiz.delete('/:id', async (c) => {
+  const id = c.req.param('id')
+  await c.env.DB.prepare('DELETE FROM quiz_results WHERE quiz_id = ?').bind(id).run()
+  await c.env.DB.prepare('DELETE FROM quizzes WHERE id = ?').bind(id).run()
+  return c.json({ ok: true })
+})
+
 quiz.get('/:id/results', async (c) => {
   const { results } = await c.env.DB.prepare(
     'SELECT * FROM quiz_results WHERE quiz_id = ? ORDER BY taken_at DESC',
@@ -114,4 +126,56 @@ quiz.get('/:id/results', async (c) => {
     .bind(c.req.param('id'))
     .all()
   return c.json(results)
+})
+
+// Cross-note subject quiz — pulls from multiple notes in a subject
+quiz.post('/subject', async (c) => {
+  try {
+    const { subject_id, count = 10 } = await c.req.json<{ subject_id: string; count?: number }>()
+    if (!subject_id) return c.json({ error: 'subject_id required' }, 400)
+
+    const subject = await c.env.DB.prepare('SELECT name FROM subjects WHERE id = ?')
+      .bind(subject_id).first<{ name: string }>()
+    if (!subject) return c.json({ error: 'Subject not found' }, 404)
+
+    // Fetch up to 5 notes from this subject that have content
+    const { results: notes } = await c.env.DB.prepare(
+      "SELECT id, title, content FROM notes WHERE subject_id = ? AND content != '' ORDER BY RANDOM() LIMIT 5"
+    ).bind(subject_id).all<{ id: string; title: string; content: string }>()
+
+    if (notes.length === 0) return c.json({ error: 'No notes with content found in this subject' }, 400)
+
+    // Build combined context — sample from each note
+    const combined = notes.map((n) => {
+      const { text } = truncateForAI(n.content)
+      const snippet = text.slice(0, Math.floor(12000 / notes.length))
+      return `## ${n.title}\n${snippet}`
+    }).join('\n\n---\n\n')
+
+    const raw = await runAI(c.env.AI,
+      `You are an expert at writing quiz questions that test real understanding across multiple topics.
+The student is studying the subject "${subject.name}" which covers ${notes.length} different note(s).
+Generate questions that span across these topics — mix easy and hard, vary the concept areas covered.
+
+Rules:
+- Test comprehension and application — "why does X happen", "what is the difference between", "what would you do if"
+- Wrong answers must be plausible — common misconceptions, not obviously wrong
+- The explanation must teach: WHY the correct answer is right AND why the most tempting wrong answer is wrong
+- Spread questions across the different topic areas — do not focus only on one note
+- Each must have exactly 4 options
+
+Output ONLY a raw JSON array, no markdown, no code fences.
+Format: [{"question":"...","options":["option1","option2","option3","option4"],"correct":0,"explanation":"...","source":"topic area in 3-5 words"}]
+"correct" is the 0-based index of the correct answer. "source" is which topic area the question covers.`,
+      `Generate ${count} mixed quiz questions from these study notes:\n\n${combined}`
+    )
+
+    let questions: Question[]
+    try { questions = parseQuestions(raw) }
+    catch { return c.json({ error: `Failed to parse questions. AI returned: ${raw.slice(0, 200)}` }, 500) }
+
+    return c.json({ subject_id, subject_name: subject.name, title: `${subject.name} — Mixed Quiz`, questions })
+  } catch (e: any) {
+    return c.json({ error: e.message ?? 'Internal error' }, 500)
+  }
 })

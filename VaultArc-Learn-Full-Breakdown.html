@@ -1,0 +1,798 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>VaultArc Learn — Full Breakdown</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,700&family=JetBrains+Mono:wght@400;500&display=swap');
+  :root {
+    --accent: #b87040;
+    --text: #1c1208;
+    --muted: #7a6a58;
+    --border: #ddd9d3;
+    --surface: #f8f5f0;
+    --danger: #b84040;
+    --success: #4a7c5e;
+    --blue: #3a6fa8;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Inter', sans-serif; background: #fff; color: var(--text); font-size: 13px; line-height: 1.7; }
+
+  /* COVER */
+  .cover { min-height: 100vh; background: var(--text); display: flex; flex-direction: column; justify-content: center; align-items: flex-start; padding: 80px; page-break-after: always; }
+  .cover-tag { font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: var(--accent); margin-bottom: 24px; font-weight: 600; }
+  .cover h1 { font-family: 'Playfair Display', serif; font-size: 60px; color: #fff; line-height: 1.1; margin-bottom: 8px; }
+  .cover h1 span { color: var(--accent); font-style: italic; }
+  .cover-sub { font-size: 17px; color: rgba(255,255,255,0.45); margin-bottom: 48px; }
+  .cover-desc { font-size: 14px; color: rgba(255,255,255,0.65); max-width: 520px; line-height: 1.9; margin-bottom: 56px; }
+  .cover-pills { display: flex; flex-wrap: wrap; gap: 10px; }
+  .cover-pill { font-size: 11px; padding: 5px 14px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.15); color: rgba(255,255,255,0.55); }
+
+  /* PAGE */
+  .page { padding: 56px 64px; page-break-after: always; }
+  .page:last-child { page-break-after: auto; }
+  .section-number { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--accent); font-weight: 700; margin-bottom: 4px; }
+  h2 { font-family: 'Playfair Display', serif; font-size: 30px; color: var(--text); margin-bottom: 6px; }
+  .page-intro { font-size: 13px; color: var(--muted); margin-bottom: 32px; max-width: 620px; line-height: 1.8; border-bottom: 1px solid var(--border); padding-bottom: 20px; }
+  h3 { font-size: 14px; font-weight: 700; margin-top: 28px; margin-bottom: 10px; color: var(--text); }
+  p { margin-bottom: 10px; }
+
+  /* CARDS */
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 18px 22px; margin-bottom: 12px; }
+  .card-title { font-weight: 700; font-size: 13px; margin-bottom: 5px; }
+  .card-desc { font-size: 12px; color: var(--muted); line-height: 1.6; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+  .grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+
+  /* TECH CARD */
+  .tc { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 16px 18px; border-top: 3px solid var(--accent); }
+  .tc.blue { border-top-color: var(--blue); }
+  .tc.green { border-top-color: var(--success); }
+  .tc h4 { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--accent); margin-bottom: 8px; }
+  .tc.blue h4 { color: var(--blue); }
+  .tc.green h4 { color: var(--success); }
+  .tc .name { font-size: 13px; font-weight: 700; margin-bottom: 4px; }
+  .tc .desc { font-size: 11px; color: var(--muted); line-height: 1.5; }
+
+  /* CODE */
+  .code { font-family: 'JetBrains Mono', monospace; font-size: 11px; background: var(--text); color: #e0d8cc; padding: 16px 20px; border-radius: 8px; margin: 12px 0; white-space: pre-wrap; line-height: 1.65; }
+  .kw { color: #e8b84b; }
+  .cm { color: #5a6a5a; }
+
+  /* FLOW */
+  .flow { display: flex; align-items: center; flex-wrap: wrap; gap: 0; margin: 18px 0; }
+  .fs { background: var(--surface); border: 1.5px solid var(--border); border-radius: 7px; padding: 9px 13px; font-size: 11px; font-weight: 600; text-align: center; min-width: 90px; }
+  .fs.a { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .fs.b { background: rgba(58,111,168,0.08); border-color: var(--blue); color: var(--blue); }
+  .fa { font-size: 15px; color: var(--border); padding: 0 5px; flex-shrink: 0; }
+
+  /* TABLE */
+  table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: 12px; }
+  th { text-align: left; padding: 8px 12px; background: var(--text); color: #fff; font-size: 11px; font-weight: 600; }
+  th:first-child { border-radius: 6px 0 0 0; }
+  th:last-child { border-radius: 0 6px 0 0; }
+  td { padding: 8px 12px; border-bottom: 1px solid var(--border); vertical-align: top; line-height: 1.5; }
+  tr:nth-child(even) td { background: var(--surface); }
+
+  /* BADGE */
+  .badge { display: inline-block; font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 999px; background: rgba(184,112,64,0.1); color: var(--accent); border: 1px solid rgba(184,112,64,0.25); margin-left: 8px; }
+  .badge.blue { background: rgba(58,111,168,0.1); color: var(--blue); border-color: rgba(58,111,168,0.25); }
+
+  /* INFO BOX */
+  .ib { border: 1px solid var(--border); border-radius: 10px; padding: 16px 20px; margin-bottom: 14px; }
+  .ib.ok { border-color: rgba(74,124,94,0.35); background: rgba(74,124,94,0.05); }
+  .ib.warn { border-color: rgba(184,64,64,0.3); background: rgba(184,64,64,0.04); }
+  .ib-title { font-weight: 700; font-size: 13px; margin-bottom: 6px; }
+  .ib.ok .ib-title { color: var(--success); }
+  .ib.warn .ib-title { color: var(--danger); }
+
+  /* ARCH */
+  .arch { display: grid; grid-template-columns: 1fr 36px 1fr 36px 1fr; align-items: center; margin: 20px 0; gap: 0; }
+  .al { background: var(--surface); border: 1.5px solid var(--border); border-radius: 10px; padding: 18px; text-align: center; }
+  .al.fe { border-top: 3px solid var(--blue); }
+  .al.wo { border-top: 3px solid var(--accent); }
+  .al.da { border-top: 3px solid var(--success); }
+  .al-title { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; }
+  .al.fe .al-title { color: var(--blue); }
+  .al.wo .al-title { color: var(--accent); }
+  .al.da .al-title { color: var(--success); }
+  .ai { font-size: 11px; padding: 4px 8px; border-radius: 5px; margin-bottom: 5px; text-align: left; background: #fff; border: 1px solid var(--border); font-weight: 500; }
+  .aa { text-align: center; font-size: 18px; color: var(--border); }
+
+  /* BACK COVER */
+  .back { min-height: 60vh; background: var(--text); display: flex; flex-direction: column; justify-content: flex-end; padding: 80px; }
+
+  @media print {
+    .page { padding: 36px 44px; }
+    .cover { padding: 56px; }
+    .cover h1 { font-size: 48px; }
+    h2 { font-size: 24px; }
+    .code { font-size: 10px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- COVER -->
+<div class="cover">
+  <div class="cover-tag">Technical Documentation · 2026</div>
+  <h1>VaultArc <span>Learn</span></h1>
+  <div class="cover-sub">AI Study Companion — Full Technical Breakdown</div>
+  <div class="cover-desc">
+    Everything about how VaultArc Learn works — from the browser to the database to the AI. Architecture, features, prompts, limits, costs, and deployment — all in one place.
+  </div>
+  <div class="cover-pills">
+    <span class="cover-pill">React + Vite + TypeScript</span>
+    <span class="cover-pill">Cloudflare Workers (Hono)</span>
+    <span class="cover-pill">Cloudflare D1 + R2 + Vectorize</span>
+    <span class="cover-pill">Llama 3.3 70B + Llama 3.1 8B</span>
+    <span class="cover-pill">BGE Embeddings</span>
+    <span class="cover-pill">SM-2 Spaced Repetition</span>
+    <span class="cover-pill">Cloudflare Access (Zero Trust)</span>
+  </div>
+</div>
+
+
+<!-- 01 WHAT IS IT -->
+<div class="page">
+  <div class="section-number">Section 01</div>
+  <h2>What Is VaultArc Learn?</h2>
+  <p class="page-intro">A personal AI-powered study app. You write or upload your notes, and the app uses AI to help you understand, retain, and test yourself — going beyond passive reading into active learning.</p>
+
+  <h3>Core Philosophy</h3>
+  <div class="grid2">
+    <div class="card">
+      <div class="card-title">Active Recall Over Passive Reading</div>
+      <div class="card-desc">Every AI feature pushes you to retrieve and apply knowledge, not just re-read. Quizzes, flashcards, and Teach It Back force active engagement with the material.</div>
+    </div>
+    <div class="card">
+      <div class="card-title">Understanding Over Memorisation</div>
+      <div class="card-desc">AI prompts are written to explain WHY and HOW, use real-world analogies, and target common misconceptions — not just list definitions.</div>
+    </div>
+    <div class="card">
+      <div class="card-title">Spaced Repetition Built In</div>
+      <div class="card-desc">Flashcards use the SM-2 algorithm. Cards you struggle with come back sooner. Cards you know well are spaced further apart. Scientifically proven to improve long-term retention.</div>
+    </div>
+    <div class="card">
+      <div class="card-title">Your Notes, Your AI</div>
+      <div class="card-desc">Every AI feature operates on your actual note content — quizzes, summaries, mind maps are all generated from what you wrote, not generic internet knowledge.</div>
+    </div>
+  </div>
+
+  <h3>Who It's For</h3>
+  <p>Anyone studying structured content — certifications (CompTIA, Microsoft, Cisco), academic subjects, professional development. Single-user personal vault.</p>
+
+  <h3>Access</h3>
+  <div class="card">
+    <div class="card-title">URL: <span style="color:var(--accent)">learn.vaultarc.co.za</span></div>
+    <div class="card-desc">Protected by Cloudflare Access (login wall — you authenticate before the page loads). All API requests require an <code>x-api-key</code> header. The key is set once in environment variables and never exposed in source code.</div>
+  </div>
+</div>
+
+
+<!-- 02 TECH STACK -->
+<div class="page">
+  <div class="section-number">Section 02</div>
+  <h2>Technology Stack</h2>
+  <p class="page-intro">Every component runs on Cloudflare's infrastructure. No separate server, no container, no DevOps overhead.</p>
+
+  <h3>Frontend</h3>
+  <div class="grid3">
+    <div class="tc blue">
+      <h4>Framework</h4>
+      <div class="name">React 19 + Vite</div>
+      <div class="desc">Single-page app. TypeScript throughout. No routing library — view state managed with useState.</div>
+    </div>
+    <div class="tc blue">
+      <h4>Hosting</h4>
+      <div class="name">Cloudflare Pages</div>
+      <div class="desc">Static site deployed from dist/. Free tier. Global CDN. Custom domain via DNS.</div>
+    </div>
+    <div class="tc blue">
+      <h4>Key Libraries</h4>
+      <div class="name">lucide-react · react-markdown</div>
+      <div class="desc">Lucide for icons. react-markdown renders AI responses. No UI component library — all custom CSS.</div>
+    </div>
+  </div>
+
+  <h3>Backend</h3>
+  <div class="grid3">
+    <div class="tc">
+      <h4>Runtime</h4>
+      <div class="name">Cloudflare Workers</div>
+      <div class="desc">Serverless edge functions. Runs globally. No cold starts.</div>
+    </div>
+    <div class="tc">
+      <h4>Framework</h4>
+      <div class="name">Hono</div>
+      <div class="desc">Lightweight web framework for Workers. Express-like routing. TypeScript native. Handles CORS and middleware.</div>
+    </div>
+    <div class="tc">
+      <h4>Utilities</h4>
+      <div class="name">nanoid · unpdf</div>
+      <div class="desc">nanoid generates 21-char IDs. unpdf extracts text from PDF files server-side.</div>
+    </div>
+  </div>
+
+  <h3>Data &amp; AI Services</h3>
+  <div class="grid3">
+    <div class="tc green">
+      <h4>Database</h4>
+      <div class="name">Cloudflare D1</div>
+      <div class="desc">SQLite at the edge. Stores notes, subjects, quizzes, and quiz results. 4 tables.</div>
+    </div>
+    <div class="tc green">
+      <h4>File Storage</h4>
+      <div class="name">Cloudflare R2</div>
+      <div class="desc">S3-compatible object storage. Stores raw uploaded PDF files. 10GB free tier. Files deleted when note is deleted.</div>
+    </div>
+    <div class="tc green">
+      <h4>Vector Search</h4>
+      <div class="name">Cloudflare Vectorize</div>
+      <div class="desc">768-dim cosine similarity index. Powers semantic search and related-note connections. Auto-indexed on create/update.</div>
+    </div>
+    <div class="tc blue">
+      <h4>AI — Reasoning</h4>
+      <div class="name">Llama 3.3 70B</div>
+      <div class="desc">Used for: quiz, scenario, ask AI, teachback, priority, mindmap, flashcards. Best quality.</div>
+    </div>
+    <div class="tc blue">
+      <h4>AI — Fast</h4>
+      <div class="name">Llama 3.1 8B</div>
+      <div class="desc">Used for: summary, ELI5, key terms. Faster and cheaper — sufficient for extraction tasks.</div>
+    </div>
+    <div class="tc blue">
+      <h4>Embeddings</h4>
+      <div class="name">BGE Base EN v1.5</div>
+      <div class="desc">Generates 768-dim vectors for Vectorize. First 2,000 chars used. Called on every note create/update.</div>
+    </div>
+  </div>
+</div>
+
+
+<!-- 03 ARCHITECTURE -->
+<div class="page">
+  <div class="section-number">Section 03</div>
+  <h2>Architecture &amp; Data Flow</h2>
+  <p class="page-intro">Three layers: browser → Worker → storage/AI. No intermediate servers. Everything runs at the Cloudflare edge.</p>
+
+  <h3>Layer Overview</h3>
+  <div class="arch">
+    <div class="al fe">
+      <div class="al-title">Frontend (Pages)</div>
+      <div class="ai">React SPA</div>
+      <div class="ai">NotesPage</div>
+      <div class="ai">AskPage</div>
+      <div class="ai">FlashcardsPage</div>
+      <div class="ai">QuizPage</div>
+      <div class="ai">lib/api.ts</div>
+      <div class="ai">lib/srs.ts</div>
+    </div>
+    <div class="aa">⟶</div>
+    <div class="al wo">
+      <div class="al-title">Worker (API)</div>
+      <div class="ai">Hono Router</div>
+      <div class="ai">Auth Middleware</div>
+      <div class="ai">CORS Middleware</div>
+      <div class="ai">15 Route Handlers</div>
+      <div class="ai">lib/ai.ts</div>
+      <div class="ai">lib/id.ts</div>
+    </div>
+    <div class="aa">⟶</div>
+    <div class="al da">
+      <div class="al-title">Data &amp; AI</div>
+      <div class="ai">D1 (SQLite)</div>
+      <div class="ai">R2 (Files)</div>
+      <div class="ai">Vectorize (Search)</div>
+      <div class="ai">Workers AI (LLM)</div>
+      <div class="ai">Workers AI (Embed)</div>
+    </div>
+  </div>
+
+  <h3>Creating a Note</h3>
+  <div class="flow">
+    <div class="fs">User types note</div><div class="fa">→</div>
+    <div class="fs">POST /notes</div><div class="fa">→</div>
+    <div class="fs">Auth check</div><div class="fa">→</div>
+    <div class="fs a">INSERT D1</div><div class="fa">→</div>
+    <div class="fs b">embed() → Vectorize</div><div class="fa">→</div>
+    <div class="fs">Return note</div>
+  </div>
+  <p style="font-size:11px;color:var(--muted)">Vectorize indexing runs in waitUntil() — does not block the response.</p>
+
+  <h3>AI Feature (e.g. Quiz)</h3>
+  <div class="flow">
+    <div class="fs">Click Generate</div><div class="fa">→</div>
+    <div class="fs">POST /quiz/generate</div><div class="fa">→</div>
+    <div class="fs">Fetch note (D1)</div><div class="fa">→</div>
+    <div class="fs">truncateForAI()</div><div class="fa">→</div>
+    <div class="fs a">runAI() → 70B</div><div class="fa">→</div>
+    <div class="fs">Parse JSON</div><div class="fa">→</div>
+    <div class="fs a">Save to D1</div><div class="fa">→</div>
+    <div class="fs">Return quiz</div>
+  </div>
+
+  <h3>Ask AI — RAG Flow</h3>
+  <div class="flow">
+    <div class="fs">User asks question</div><div class="fa">→</div>
+    <div class="fs">POST /ask</div><div class="fa">→</div>
+    <div class="fs b">embed(question)</div><div class="fa">→</div>
+    <div class="fs b">Vectorize.query() score &gt;0.65</div><div class="fa">→</div>
+    <div class="fs">Fetch related notes</div><div class="fa">→</div>
+    <div class="fs a">runAI() + context</div><div class="fa">→</div>
+    <div class="fs">Return answer</div>
+  </div>
+
+  <h3>PDF Upload Flow</h3>
+  <div class="flow">
+    <div class="fs">Drop PDF</div><div class="fa">→</div>
+    <div class="fs">POST /uploads</div><div class="fa">→</div>
+    <div class="fs">Size check ≤15MB</div><div class="fa">→</div>
+    <div class="fs">unpdf → text</div><div class="fa">→</div>
+    <div class="fs">Truncate ≤120k</div><div class="fa">→</div>
+    <div class="fs a">R2 store file</div><div class="fa">→</div>
+    <div class="fs a">D1 INSERT note</div><div class="fa">→</div>
+    <div class="fs b">embed() → Vectorize</div>
+  </div>
+
+  <h3>Content Truncation (truncateForAI)</h3>
+  <p>Before any AI call, note content is capped at 20,000 characters. If longer, it takes the first 10,000 chars + last 10,000 chars with a <code>[... content truncated ...]</code> marker — so the AI always sees the beginning and end of the note.</p>
+</div>
+
+
+<!-- 04 DATABASE -->
+<div class="page">
+  <div class="section-number">Section 04</div>
+  <h2>Database Schema</h2>
+  <p class="page-intro">Cloudflare D1 (SQLite). Four tables. All IDs are nanoid strings (21 chars). All timestamps are Unix milliseconds (Date.now()).</p>
+
+  <div class="code"><span class="cm">-- Core note storage</span>
+<span class="kw">CREATE TABLE</span> notes (
+  id          TEXT PRIMARY KEY,
+  title       TEXT NOT NULL,
+  content     TEXT NOT NULL DEFAULT '',
+  source_type TEXT NOT NULL DEFAULT 'text',  <span class="cm">-- 'text' | 'upload'</span>
+  file_key    TEXT,                          <span class="cm">-- R2 object key (only for uploads)</span>
+  subject_id  TEXT,                         <span class="cm">-- FK → subjects.id (nullable)</span>
+  section     TEXT,                         <span class="cm">-- section name within subject</span>
+  position    INTEGER,                      <span class="cm">-- sort order</span>
+  tags        TEXT DEFAULT '',              <span class="cm">-- comma-separated string</span>
+  created_at  INTEGER NOT NULL,
+  updated_at  INTEGER NOT NULL
+);
+
+<span class="cm">-- Subject folders</span>
+<span class="kw">CREATE TABLE</span> subjects (
+  id         TEXT PRIMARY KEY,
+  name       TEXT NOT NULL,
+  color      TEXT NOT NULL DEFAULT '#b87040',
+  created_at INTEGER NOT NULL
+);
+
+<span class="cm">-- Generated quizzes (questions stored as JSON string)</span>
+<span class="kw">CREATE TABLE</span> quizzes (
+  id         TEXT PRIMARY KEY,
+  note_id    TEXT NOT NULL,
+  title      TEXT NOT NULL,
+  questions  TEXT NOT NULL,  <span class="cm">-- JSON: [{question, options[], correct, explanation}]</span>
+  created_at INTEGER NOT NULL
+);
+
+<span class="cm">-- Quiz attempt results</span>
+<span class="kw">CREATE TABLE</span> quiz_results (
+  id       TEXT PRIMARY KEY,
+  quiz_id  TEXT NOT NULL,
+  score    INTEGER NOT NULL,
+  total    INTEGER NOT NULL,
+  answers  TEXT NOT NULL,   <span class="cm">-- JSON: [0, 2, 1, 3, ...]</span>
+  taken_at INTEGER NOT NULL
+);</div>
+
+  <h3>What's NOT in D1</h3>
+  <p>Flashcard decks, chat history, summaries, ELI5, key terms, priority results, and mind maps are all cached in <strong>localStorage</strong> in the browser — not in the database. This keeps the worker fast and the database lean.</p>
+</div>
+
+
+<!-- 05 API ROUTES -->
+<div class="page">
+  <div class="section-number">Section 05</div>
+  <h2>All API Routes</h2>
+  <p class="page-intro">Base URL: <code>https://vaultarc-learn-api.fives-account.workers.dev</code>. All routes require <code>x-api-key</code> header (except OPTIONS preflight). Auth enforced in global middleware.</p>
+
+  <table>
+    <thead><tr><th>Method</th><th>Path</th><th>What it does</th><th>AI Model</th></tr></thead>
+    <tbody>
+      <tr><td>GET</td><td>/health</td><td>Liveness check — returns {"ok":true}</td><td>—</td></tr>
+      <tr><td>GET</td><td>/notes</td><td>List notes. Query params: q (search), tag, subject_id / none</td><td>—</td></tr>
+      <tr><td>GET</td><td>/notes/tags</td><td>All distinct tags across all notes</td><td>—</td></tr>
+      <tr><td>GET</td><td>/notes/:id</td><td>Single note with full content</td><td>—</td></tr>
+      <tr><td>POST</td><td>/notes</td><td>Create note. Triggers Vectorize embed in background (waitUntil).</td><td>BGE embed</td></tr>
+      <tr><td>PUT</td><td>/notes/:id</td><td>Update note. Partial update — only provided fields change. Re-indexes if title/content changed.</td><td>BGE embed</td></tr>
+      <tr><td>DELETE</td><td>/notes/:id</td><td>Delete from D1 + delete R2 file (if upload) + delete from Vectorize</td><td>—</td></tr>
+      <tr><td>GET</td><td>/subjects</td><td>All subject folders with note_count</td><td>—</td></tr>
+      <tr><td>POST</td><td>/subjects</td><td>Create subject. Body: name, color</td><td>—</td></tr>
+      <tr><td>PUT</td><td>/subjects/:id</td><td>Rename or recolor subject</td><td>—</td></tr>
+      <tr><td>DELETE</td><td>/subjects/:id</td><td>Delete subject (notes become uncategorised)</td><td>—</td></tr>
+      <tr><td>POST</td><td>/uploads</td><td>multipart/form-data. Extracts PDF text (unpdf), stores file in R2, note in D1, embeds in Vectorize.</td><td>BGE embed</td></tr>
+      <tr><td>POST</td><td>/ask</td><td>Ask a question about a note. RAG: embeds question, finds related notes (score &gt;0.65), passes as extra context.</td><td>Llama 70B</td></tr>
+      <tr><td>POST</td><td>/summary</td><td>Structured summary: Big Picture → Core Concepts → How It Fits → Common Confusion</td><td>Llama 8B</td></tr>
+      <tr><td>POST</td><td>/eli5</td><td>Plain-language explanation with real-world analogies + "The one thing to remember"</td><td>Llama 8B</td></tr>
+      <tr><td>POST</td><td>/keyterms</td><td>Extract up to 12 load-bearing terms as JSON string array</td><td>Llama 8B</td></tr>
+      <tr><td>POST</td><td>/priority</td><td>Prioritise concepts: must_know / should_know / nice_to_know — each with why + anchor</td><td>Llama 70B</td></tr>
+      <tr><td>POST</td><td>/mindmap</td><td>Generate mind map: center + 3 branches + 2 children each (JSON)</td><td>Llama 70B</td></tr>
+      <tr><td>POST</td><td>/connections</td><td>Find semantically related notes via Vectorize (score &gt;0.7, topK=5). No LLM — pure vector similarity.</td><td>BGE embed</td></tr>
+      <tr><td>POST</td><td>/teachback/question</td><td>Generate Feynman-technique question — targets most misunderstood concept, forces WHY/HOW explanation</td><td>Llama 70B</td></tr>
+      <tr><td>POST</td><td>/teachback/evaluate</td><td>Score student's explanation: strong / partial / needs_work. Returns got_right, missed, remember.</td><td>Llama 70B</td></tr>
+      <tr><td>POST</td><td>/flashcards/generate</td><td>Generate N flashcards testing understanding (why/how), not rote recall.</td><td>Llama 70B</td></tr>
+      <tr><td>POST</td><td>/quiz/generate</td><td>Generate N multiple-choice questions. Stored in D1. Returns id + questions.</td><td>Llama 70B</td></tr>
+      <tr><td>GET</td><td>/quiz/note/:note_id</td><td>All quizzes for a note (id, title, created_at)</td><td>—</td></tr>
+      <tr><td>GET</td><td>/quiz/:id</td><td>Full quiz with parsed questions array</td><td>—</td></tr>
+      <tr><td>POST</td><td>/quiz/:id/submit</td><td>Submit answers. Scores result + stores in quiz_results table.</td><td>—</td></tr>
+      <tr><td>GET</td><td>/quiz/:id/results</td><td>All past attempts for a quiz, newest first</td><td>—</td></tr>
+      <tr><td>POST</td><td>/scenario/generate</td><td>Generate N scenario-based applied-thinking questions (not stored in D1 — frontend only)</td><td>Llama 70B</td></tr>
+      <tr><td>GET</td><td>/progress</td><td>Stats: total notes, quizzes taken, avg score, recent activity</td><td>—</td></tr>
+    </tbody>
+  </table>
+</div>
+
+
+<!-- 06 AI FEATURES & PROMPTS -->
+<div class="page">
+  <div class="section-number">Section 06</div>
+  <h2>AI Features &amp; Prompts</h2>
+  <p class="page-intro">Every feature has a carefully engineered system prompt. The philosophy: force genuine understanding, not surface recall. Prompts resist generic, hollow output.</p>
+
+  <h3>Summarise <span class="badge">Llama 8B</span></h3>
+  <p>Four named sections — not a flat bullet list. Builds a mental model, doesn't just compress text.</p>
+  <div class="code">You are an expert tutor who understands how people learn and retain information.
+Summarise the notes in a way that builds genuine understanding — not just a list of facts.
+
+Structure:
+**The Big Picture** — one sentence on what this topic is really about and why it matters
+**Core Concepts** — bullet points: concept → what it does / why it exists (not just a definition)
+**How It Fits Together** — 2-3 sentences connecting the concepts to each other
+**Common Confusion** — one thing students typically misunderstand about this topic
+
+Write as if explaining to someone who wants to truly understand, not just memorise.</div>
+
+  <h3>Simplify / ELI5 <span class="badge">Llama 8B</span></h3>
+  <p>Opens with a vivid analogy, closes with one sticky sentence. Not dumbed down — made genuinely clear.</p>
+  <div class="code">You are a brilliant teacher who can make any complex topic click instantly.
+Your goal is not to dumb things down — it is to build genuine understanding through analogy and story.
+
+Rules:
+- Open with one powerful analogy that captures the whole topic (vivid and concrete)
+- Explain each key concept: "what is this LIKE in real life?" — use things everyone has experienced
+- Short sentences. Bold the concept when you first introduce it.
+- Point out what makes this topic tricky — where people get confused and why
+- Close with: "**The one thing to remember:** ..." — one sentence that will stick
+
+Never say "imagine" as your first word. Start with the analogy directly.</div>
+
+  <h3>Key Terms <span class="badge">Llama 8B</span></h3>
+  <p>Only load-bearing terms — concepts that unlock understanding of other things. Max 12. Trivia filtered out.</p>
+  <div class="code">Extract the key terms that are load-bearing to understanding this topic.
+Only include terms where knowing them unlocks understanding of something else.
+Skip supporting details and examples.
+Prioritise terms that are frequently tested, commonly confused, or essential building blocks.
+Output ONLY a JSON array of strings. Maximum 12 terms. Short phrases only (1-4 words each).</div>
+
+  <h3>What Matters (Priority) <span class="badge">Llama 70B</span></h3>
+  <p>Ruthless triage into three buckets. Each item has a specific WHY and a real-world ANCHOR to make it stick.</p>
+  <div class="code">You are a master tutor who knows exactly what to focus on to build understanding efficiently.
+Analyse these notes and ruthlessly prioritise what the student needs to know.
+
+Buckets:
+- must_know: 2-4 concepts that are the foundation everything else builds on.
+  If you had one hour to study, spend it here.
+- should_know: 3-5 concepts that deepen understanding. Important, but only after must_know is solid.
+- nice_to_know: interesting details, edge cases — valuable but skippable under time pressure.
+
+For each concept:
+- concept: short name (3-6 words max)
+- why: one sentence — WHY this belongs at this priority level (not just "it's important")
+- anchor: a concrete real-world analogy that makes this concept stick (1-2 sentences)</div>
+
+  <h3>Mind Map <span class="badge">Llama 70B</span></h3>
+  <p>Exactly 3 branches, 2 children each. Labels kept short for SVG nodes. Frontend renders center + branches only.</p>
+  <div class="code">Pick only the TOP 3 most important concept areas — ignore minor details.
+- center: the main topic (3 words max)
+- branches: EXACTLY 3 branches — the 3 most critical concept areas
+- each branch has EXACTLY 2 children — the 2 most important sub-points
+- keep all labels SHORT (2-4 words max)
+- ruthlessly prioritise what matters most</div>
+
+  <h3>Ask AI — RAG <span class="badge blue">Llama 70B + BGE embed</span></h3>
+  <p>Questions answered in the context of the selected note. Vectorize simultaneously pulls up to 2 related notes (score &gt;0.65) as extra context — the answer can draw on knowledge from across the whole vault.</p>
+  <div class="code">System prompt:
+"You are a helpful study assistant. The user is studying notes titled '{title}'.
+Answer questions based on the note content. If the answer isn't in the notes, say so.
+
+NOTE CONTENT: {noteText}
+
+RELATED NOTES (for additional context): {extraContext}"</div>
+
+  <h3>Connections <span class="badge blue">BGE embed only — zero LLM tokens</span></h3>
+  <p>Embeds the note's title + first 2,000 chars, queries Vectorize topK=5, filters score &gt;0.7. Returns matching note titles. No AI generation at all — pure vector similarity.</p>
+
+  <h3>Teach It Back <span class="badge">Llama 70B</span></h3>
+  <p>Two-step Feynman technique. Step 1 generates a question. Step 2 evaluates the student's explanation for actual understanding vs word repetition.</p>
+  <div class="code">Question generation:
+Pick the single concept that is most important AND most commonly misunderstood.
+Ask the student to explain it as if teaching someone who has never encountered the topic.
+The question must force them to explain the WHY and HOW, not just the WHAT.
+
+Evaluation — scoring criteria:
+"strong":     explained WHY and HOW correctly. They could teach it.
+"partial":    right idea but missed something important, or explained WHAT without WHY
+"needs_work": confused, used right words incorrectly, or mostly missed the point
+
+Returns: { score, got_right, missed, remember }</div>
+
+  <h3>Flashcards <span class="badge">Llama 70B</span></h3>
+  <p>Cards test understanding, not rote recall. Front asks why/how/difference. Back gives answer + analogy if helpful. One idea per card.</p>
+  <div class="code">Front: a question that tests understanding, not just recall.
+Ask "why", "how", "what happens when", "what is the difference between" — not "what is X"
+Back: clear, complete answer in plain language. Include analogy/example in one sentence if useful.
+One idea per card. Never cram two concepts into one.
+Prioritise concepts that are commonly confused, frequently tested, or foundational.</div>
+
+  <h3>Quiz — Standard <span class="badge">Llama 70B</span></h3>
+  <p>4-option multiple choice. Wrong answers are real misconceptions — not obviously wrong. Explanations teach the reasoning.</p>
+  <div class="code">Test comprehension and application — "why does X happen", "what would you do if",
+"what is the difference between" — not "what is the definition of"
+Wrong answers must be plausible — common misconceptions, related concepts that sound right.
+The explanation must teach: WHY the correct answer is right AND
+why the most tempting wrong answer is wrong.</div>
+
+  <h3>Quiz — Scenario <span class="badge">Llama 70B</span></h3>
+  <p>Applied thinking. Every question describes a realistic situation first — troubleshooting, incident response, design decisions. Forces application of knowledge, not recall.</p>
+  <div class="code">Every question must describe a specific, realistic situation — a problem to solve,
+an incident to respond to, a decision to make.
+The correct answer requires understanding WHY, not just WHAT.
+Wrong answers must represent real mistakes: the "almost right" choice, the "I'd do that first" trap.
+Contexts: troubleshooting, incident response, design decisions, policy choices — whatever fits.</div>
+</div>
+
+
+<!-- 07 SPACED REPETITION -->
+<div class="page">
+  <div class="section-number">Section 07</div>
+  <h2>Spaced Repetition System</h2>
+  <p class="page-intro">Built on the SM-2 algorithm. Runs entirely in the browser — no server, no database calls. Card state lives in localStorage. Each note has its own independent deck.</p>
+
+  <h3>How SM-2 Works</h3>
+  <p>After reviewing each card you rate it Hard / OK / Easy (1/2/3). The algorithm adjusts the interval (days until next review). Cards you find easy get pushed further out. Hard cards come back tomorrow. Over time, you spend almost zero time on things you already know.</p>
+
+  <div class="grid2">
+    <div class="card">
+      <div class="card-title">Card State Object</div>
+      <div class="code" style="font-size:10.5px">type CardState = {
+  front: string
+  back: string
+  interval: number    // days until next review
+  easeFactor: number  // starts at 2.5
+  dueDate: number     // Unix ms timestamp
+  reps: number        // times seen
+}</div>
+    </div>
+    <div class="card">
+      <div class="card-title">Rating Logic</div>
+      <div class="code" style="font-size:10.5px">Hard (1): interval = 1 day, reps reset to 0
+OK   (2): interval = prev × easeFactor
+Easy (3): interval = prev × easeFactor
+          easeFactor += 0.1 (max 2.5)
+
+All:  easeFactor = max(1.3, ef - 0.1 + 0.1×rating)
+Next review = now + interval × 86,400,000ms</div>
+    </div>
+  </div>
+
+  <h3>New Card Defaults</h3>
+  <p>Every new card: <code>interval: 1</code>, <code>easeFactor: 2.5</code>, <code>dueDate: now</code> (immediately due), <code>reps: 0</code>. First Easy rating schedules it 4 days out. First OK schedules it 1 day out.</p>
+
+  <h3>localStorage Keys</h3>
+  <table>
+    <thead><tr><th>Key</th><th>Contents</th><th>Cleared when</th></tr></thead>
+    <tbody>
+      <tr><td><code>vaultarc-srs-{noteId}</code></td><td>JSON array of CardState objects — the full SRS deck for that note</td><td>Never auto-cleared. Persists until browser data is cleared.</td></tr>
+      <tr><td><code>vaultarc-summary-{noteId}</code></td><td>Cached summary markdown text</td><td>When regenerated</td></tr>
+      <tr><td><code>vaultarc-eli5-{noteId}</code></td><td>Cached ELI5 explanation</td><td>When regenerated</td></tr>
+      <tr><td><code>vaultarc-keyterms-{noteId}</code></td><td>JSON array of key term strings</td><td>When regenerated</td></tr>
+      <tr><td><code>vaultarc-priority-{noteId}</code></td><td>JSON PriorityResult — must/should/nice buckets</td><td>When regenerated</td></tr>
+      <tr><td><code>vaultarc-mindmap-{noteId}</code></td><td>JSON MindMapResult — center + branches</td><td>When regenerated</td></tr>
+      <tr><td><code>vaultarc-chat-{noteId}</code></td><td>Array of Ask AI chat messages</td><td>When chat is manually cleared</td></tr>
+    </tbody>
+  </table>
+</div>
+
+
+<!-- 08 LIMITS -->
+<div class="page">
+  <div class="section-number">Section 08</div>
+  <h2>Limits &amp; Feature Guards</h2>
+  <p class="page-intro">Hard limits prevent the app from attempting things that won't work. Soft guards disable features on content where they'd produce poor output — not to block the user, but to protect the quality of the experience.</p>
+
+  <h3>Hard Limits — Enforced Server-Side</h3>
+  <table>
+    <thead><tr><th>Limit</th><th>Value</th><th>Where</th><th>Why</th></tr></thead>
+    <tbody>
+      <tr><td>Max upload file size</td><td>15 MB</td><td>uploads.ts</td><td>Cloudflare Workers request body limit</td></tr>
+      <tr><td>Max extracted text (PDF)</td><td>120,000 chars (~30 pages)</td><td>uploads.ts</td><td>D1 row size + AI context performance</td></tr>
+      <tr><td>Max content passed to AI</td><td>20,000 chars</td><td>truncateForAI()</td><td>Workers AI context window. Takes first 10k + last 10k chars.</td></tr>
+      <tr><td>Max AI response tokens</td><td>2,048 tokens</td><td>ai.ts callAI()</td><td>Prevents runaway generation, controls cost</td></tr>
+      <tr><td>Vectorize embed input</td><td>2,000 chars</td><td>embed() calls</td><td>BGE model's effective embedding window</td></tr>
+      <tr><td>RAG related notes</td><td>Top 2 (score &gt;0.65)</td><td>ask.ts</td><td>Context window management — quality over quantity</td></tr>
+      <tr><td>Connections result</td><td>Top 4 (score &gt;0.7)</td><td>connections.ts</td><td>Higher threshold = more meaningful matches</td></tr>
+      <tr><td>Key terms</td><td>Max 12</td><td>Prompt instruction</td><td>More terms defeats the purpose of the feature</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Soft Guards — Enforced Frontend (per note)</h3>
+  <table>
+    <thead><tr><th>Feature</th><th>Guard condition</th><th>Behaviour</th></tr></thead>
+    <tbody>
+      <tr><td>Mind Map</td><td>Uploaded PDF or content &lt;80 chars</td><td>Button disabled with tooltip</td></tr>
+      <tr><td>Teach It Back</td><td>Uploaded PDF or content &lt;80 chars</td><td>Button disabled — needs structured prose</td></tr>
+      <tr><td>Summarise / Simplify</td><td>Content &lt;80 chars</td><td>Button disabled — nothing to summarise</td></tr>
+      <tr><td>Key Terms</td><td>Content &lt;300 chars</td><td>Button disabled — too little to extract from</td></tr>
+      <tr><td>Flashcards (PDF tip)</td><td>Uploaded PDF</td><td>Informational tip only — still allowed</td></tr>
+    </tbody>
+  </table>
+
+  <div class="grid2" style="margin-top:20px">
+    <div class="ib ok">
+      <div class="ib-title">Works on uploaded PDFs</div>
+      <p style="font-size:12px;margin-top:6px">Summarise · Simplify · Key Terms · What Matters · Quiz · Scenario · Flashcards · Ask AI · Connections</p>
+    </div>
+    <div class="ib warn">
+      <div class="ib-title">Disabled on uploaded PDFs</div>
+      <p style="font-size:12px;margin-top:6px">Mind Map · Teach It Back</p>
+      <p style="font-size:11px;color:var(--muted);margin-top:4px">PDF text extraction loses structure — these features need well-organised prose to produce meaningful output.</p>
+    </div>
+  </div>
+</div>
+
+
+<!-- 09 SECURITY -->
+<div class="page">
+  <div class="section-number">Section 09</div>
+  <h2>Security</h2>
+  <p class="page-intro">Two independent layers. Either alone would be sufficient for a personal tool — both together mean nothing reaches your data unless it came from you through your browser.</p>
+
+  <div class="grid2">
+    <div class="card">
+      <div class="card-title">Layer 1 — Cloudflare Access (Zero Trust)</div>
+      <div class="card-desc">The frontend at learn.vaultarc.co.za is behind Cloudflare Access. Any request triggers an auth check. You log in once (email OTP or identity provider) — Cloudflare issues a signed JWT cookie. Without it, you see the CF login screen, not the app. Blocks bots, scrapers, and anyone who doesn't have credentials.</div>
+    </div>
+    <div class="card">
+      <div class="card-title">Layer 2 — API Key (x-api-key header)</div>
+      <div class="card-desc">Every API request includes an x-api-key header. The worker checks it against env.API_KEY (a Wrangler secret). If missing or wrong → 401 Unauthorized before any route handler runs. The key is stored as a Cloudflare Pages env var — never in source code. OPTIONS preflight requests are exempt so CORS works.</div>
+    </div>
+  </div>
+
+  <h3>CORS Policy</h3>
+  <p>Worker allows three origins: <code>learn.vaultarc.co.za</code> (production), <code>vaultarc-learn.pages.dev</code> (preview), and <code>localhost:5173</code> (local dev). All other origins are blocked at the CORS layer.</p>
+
+  <h3>What Is NOT Stored or Transmitted</h3>
+  <ul style="padding-left:20px;line-height:2.2;margin-top:8px">
+    <li>No passwords — Cloudflare Access handles identity</li>
+    <li>No analytics or third-party scripts</li>
+    <li>Note content never leaves Cloudflare infrastructure — Workers AI runs on CF's own hardware</li>
+    <li>R2 files are private — no public URLs generated</li>
+    <li>Single-tenant — no multi-user data separation needed, no user accounts</li>
+  </ul>
+</div>
+
+
+<!-- 10 COST -->
+<div class="page">
+  <div class="section-number">Section 10</div>
+  <h2>Cost Breakdown</h2>
+  <p class="page-intro">The entire app runs on Cloudflare free tiers. For personal daily use, the monthly cost is R0.</p>
+
+  <h3>Free Tier Summary</h3>
+  <table>
+    <thead><tr><th>Service</th><th>Free Tier</th><th>Typical Daily Use</th><th>Risk</th></tr></thead>
+    <tbody>
+      <tr><td>Workers AI</td><td>10,000 neurons/day</td><td>~1,000–3,000 neurons (5–15 AI actions)</td><td style="color:var(--success)">Very low</td></tr>
+      <tr><td>Cloudflare D1</td><td>5GB storage, 5M reads/day, 100k writes/day</td><td>&lt;10MB, &lt;1k reads/day</td><td style="color:var(--success)">Negligible</td></tr>
+      <tr><td>Cloudflare R2</td><td>10GB storage, 10M reads/mo, 1M writes/mo</td><td>&lt;100MB, &lt;100 uploads/month</td><td style="color:var(--success)">Negligible</td></tr>
+      <tr><td>Cloudflare Vectorize</td><td>30M query dimensions/month</td><td>&lt;1M query dims/month</td><td style="color:var(--success)">Very low</td></tr>
+      <tr><td>Cloudflare Workers</td><td>100,000 requests/day</td><td>&lt;500 requests/day</td><td style="color:var(--success)">Negligible</td></tr>
+      <tr><td>Cloudflare Pages</td><td>Unlimited requests</td><td>Personal use</td><td style="color:var(--success)">None</td></tr>
+      <tr><td>Cloudflare Access</td><td>50 users free</td><td>1 user</td><td style="color:var(--success)">None</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Workers AI Neurons</h3>
+  <p>Workers AI charges in "neurons". Approximate cost per action: summary ≈ 300–500 · quiz (5 Qs) ≈ 800–1,200 · flashcards (10) ≈ 600–900 · Ask AI response ≈ 400–700. At 5–15 actions/day you'll use roughly 1,000–3,000 of your 10,000 free neurons.</p>
+
+  <div class="ib ok" style="margin-top:20px">
+    <div class="ib-title">Current monthly cost: R0</div>
+    <p style="font-size:12px;margin-top:6px">No credit card needed to stay within free tiers. The only paid component is the domain (vaultarc.co.za) at ~R150–200/year. If you ever hit limits, Cloudflare's paid Workers plan is $5/month (≈R95) — far more than a personal study tool would ever need. No surprise bills — spending limits are configurable in the dashboard.</p>
+  </div>
+</div>
+
+
+<!-- 11 DEPLOYMENT -->
+<div class="page">
+  <div class="section-number">Section 11</div>
+  <h2>Deployment</h2>
+  <p class="page-intro">Two separate deployments — frontend and worker — each with their own command. Both use Wrangler (Cloudflare's CLI). Manual deploy on demand.</p>
+
+  <h3>Worker</h3>
+  <div class="code">cd worker
+npx wrangler deploy
+
+<span class="cm"># Bindings from wrangler.toml:</span>
+<span class="cm">#   env.DB        → D1 database (vaultarc-learn)</span>
+<span class="cm">#   env.FILES     → R2 bucket (vaultarc-learn-files)</span>
+<span class="cm">#   env.VECTORIZE → Vectorize index (vaultarc-notes)</span>
+<span class="cm">#   env.AI        → Workers AI (automatic)</span>
+<span class="cm">#   env.API_KEY   → Wrangler secret (set once: wrangler secret put API_KEY)</span>
+<span class="cm">#   env.FRONTEND_URL → Wrangler secret (production origin)</span></div>
+
+  <h3>Frontend</h3>
+  <div class="code">cd frontend
+npm run build   <span class="cm"># tsc + vite build → dist/</span>
+npx wrangler pages deploy dist --project-name vaultarc-learn</div>
+
+  <h3>D1 Schema Migration</h3>
+  <div class="code">npx wrangler d1 execute vaultarc-learn --remote --file=./migrations/001_init.sql
+npx wrangler d1 execute vaultarc-learn --remote --file=./migrations/002_subjects.sql</div>
+
+  <h3>Vectorize Index (created once)</h3>
+  <div class="code">npx wrangler vectorize create vaultarc-notes --dimensions=768 --metric=cosine</div>
+
+  <h3>Environment Variables</h3>
+  <table>
+    <thead><tr><th>Variable</th><th>Location</th><th>Value</th></tr></thead>
+    <tbody>
+      <tr><td><code>VITE_API_URL</code></td><td>frontend/.env + Pages env</td><td>Worker URL</td></tr>
+      <tr><td><code>VITE_API_KEY</code></td><td>frontend/.env + Pages env</td><td>Shared secret — same as API_KEY</td></tr>
+      <tr><td><code>API_KEY</code></td><td>Wrangler secret (worker)</td><td>Set via: wrangler secret put API_KEY</td></tr>
+      <tr><td><code>FRONTEND_URL</code></td><td>Wrangler secret (worker)</td><td>Production frontend origin for CORS</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Package Versions</h3>
+  <table>
+    <thead><tr><th>Package</th><th>Version</th><th>Purpose</th></tr></thead>
+    <tbody>
+      <tr><td>hono</td><td>^4.x</td><td>Worker HTTP framework</td></tr>
+      <tr><td>wrangler</td><td>^4.x</td><td>Cloudflare CLI + deploy tool</td></tr>
+      <tr><td>react + react-dom</td><td>^19.x</td><td>Frontend UI</td></tr>
+      <tr><td>vite</td><td>^8.x</td><td>Frontend bundler</td></tr>
+      <tr><td>typescript</td><td>^5.x</td><td>Type checking (both projects)</td></tr>
+      <tr><td>lucide-react</td><td>^0.x</td><td>Icons</td></tr>
+      <tr><td>react-markdown</td><td>^9.x</td><td>Render AI responses as markdown</td></tr>
+      <tr><td>nanoid</td><td>^5.x</td><td>ID generation</td></tr>
+      <tr><td>unpdf</td><td>^0.x</td><td>PDF text extraction</td></tr>
+    </tbody>
+  </table>
+</div>
+
+
+<!-- BACK COVER -->
+<div class="back">
+  <div style="border-top:1px solid rgba(255,255,255,0.1);padding-top:36px">
+    <div style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--accent);font-weight:600;margin-bottom:14px">VaultArc Learn · Stack Summary</div>
+    <div style="color:rgba(255,255,255,0.4);font-size:12px;line-height:2.2">
+      Frontend: Cloudflare Pages · Vite + React 19 + TypeScript<br>
+      Backend: Cloudflare Workers · Hono framework<br>
+      Database: Cloudflare D1 (SQLite) · 4 tables<br>
+      File Storage: Cloudflare R2 · PDF files<br>
+      Vector Search: Cloudflare Vectorize · 768-dim cosine · BGE Base EN v1.5<br>
+      AI (Reasoning): Llama 3.3 70B instruct fp8 fast<br>
+      AI (Fast): Llama 3.1 8B instruct<br>
+      SRS: SM-2 algorithm · localStorage · per-note decks<br>
+      Auth: Cloudflare Access (Zero Trust) + x-api-key header
+    </div>
+    <div style="color:rgba(255,255,255,0.2);font-size:11px;margin-top:28px">Generated May 2026 · learn.vaultarc.co.za</div>
+  </div>
+</div>
+
+</body>
+</html>

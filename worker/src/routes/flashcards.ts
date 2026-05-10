@@ -18,12 +18,17 @@ flashcards.post('/generate', async (c) => {
     if (!note) return c.json({ error: 'Note not found' }, 404)
     if (!note.content?.trim()) return c.json({ error: 'Note has no content' }, 400)
 
-    const system = `You are a flashcard generator. Output ONLY a raw JSON array, no markdown, no code fences.
+    const system = `You are an expert at creating flashcards that build genuine understanding and long-term retention.
 
-Generate ${count} flashcards from the notes. Each card has a front (question/term) and back (answer/definition).
+Rules for every card:
+- Front: a question that tests understanding, not just recall. Ask "why", "how", "what happens when", "what is the difference between" — not just "what is X"
+- Back: a clear, complete answer in plain language. If there is a useful analogy or example, include it in one sentence.
+- One idea per card. Never cram two concepts into one card.
+- Prioritise concepts that are commonly confused, frequently tested, or foundational to understanding other concepts
+- Vary the question style — definitions, comparisons, cause-effect, real-world application
 
-Output format (raw JSON array only):
-[{"front":"...","back":"..."}]`
+Generate ${count} flashcards. Output ONLY a raw JSON array, no markdown, no code fences.
+Format: [{"front":"...","back":"..."}]`
 
     const { text: noteText } = truncateForAI(note.content)
     const raw = await runAI(c.env.AI, system, noteText)

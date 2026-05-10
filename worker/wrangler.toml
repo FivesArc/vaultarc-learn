@@ -15,5 +15,9 @@ bucket_name = "vaultarc-learn-files"
 [ai]
 binding = "AI"
 
+[[vectorize]]
+binding = "VECTORIZE"
+index_name = "vaultarc-notes"
+
 [vars]
-FRONTEND_URL = "https://vaultarc-learn.pages.dev"
+FRONTEND_URL = "https://learn.vaultarc.co.za"

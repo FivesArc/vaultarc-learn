@@ -32,8 +32,12 @@ class ErrorBoundary extends Component<{ children: ReactNode }, { error: string |
 export default function App() {
   const [page, setPage] = useState<Page>('notes')
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [notesKey, setNotesKey] = useState(0)
+  const [askKey, setAskKey] = useState(0)
 
   function navigate(id: Page) {
+    if (id === 'notes') setNotesKey((k) => k + 1)
+    if (id === 'ask') setAskKey((k) => k + 1)
     setPage(id)
     setSidebarOpen(false)
   }
@@ -41,7 +45,6 @@ export default function App() {
   return (
     <ErrorBoundary>
       <div className="layout">
-        {/* Mobile overlay */}
         {sidebarOpen && <div className="sidebar-overlay" onClick={() => setSidebarOpen(false)} />}
 
         <aside className={`sidebar${sidebarOpen ? ' open' : ''}`}>
@@ -75,8 +78,8 @@ export default function App() {
           </div>
           <main className="main">
             <ErrorBoundary>
-              {page === 'notes' && <NotesPage />}
-              {page === 'ask' && <AskPage />}
+              {page === 'notes' && <NotesPage key={notesKey} />}
+              {page === 'ask' && <AskPage key={askKey} />}
               {page === 'flashcards' && <FlashcardsPage />}
               {page === 'quiz' && <QuizPage />}
             </ErrorBoundary>

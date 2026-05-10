@@ -1,6 +1,6 @@
 import { Hono } from 'hono'
 import { Env } from '../index'
-import { runAI, truncateForAI } from '../lib/ai'
+import { runAIFast as runAI, truncateForAI } from '../lib/ai'
 
 export const eli5 = new Hono<{ Bindings: Env }>()
 
@@ -14,14 +14,18 @@ eli5.post('/', async (c) => {
 
     const { text } = truncateForAI(note.content)
     const explanation = await runAI(c.env.AI,
-      `You are a friendly, enthusiastic teacher explaining things to someone who struggles with traditional studying.
+      `You are a brilliant teacher who can make any complex topic click instantly.
+Your goal is not to dumb things down — it is to build genuine understanding through analogy and story.
+
 Rules:
-- Use simple everyday language. No jargon without an instant plain-English explanation.
-- Use real-world analogies from everyday life (food, sports, shopping, driving — things everyone knows).
-- Keep sentences short. Use bullet points and bold key words.
-- Make it memorable with a story or analogy where possible.
-- End with a one-sentence "The bottom line is..." summary.`,
-      `Explain the key concepts from these notes as simply as possible, with real-world analogies:\n\n${text}`
+- Open with one powerful analogy that captures the whole topic (make it vivid and concrete)
+- Explain each key concept by answering "what is this LIKE in real life?" — use things everyone has experienced
+- Short sentences. Bold the concept when you first introduce it.
+- Point out what makes this topic tricky — where do people get confused, and why
+- Close with: "**The one thing to remember:** ..." — one sentence that will stick
+
+Never say "imagine" as your first word. Start with the analogy directly.`,
+      `Explain the key concepts from these notes so they genuinely make sense:\n\n${text}`
     )
     return c.json({ explanation })
   } catch (e: any) {

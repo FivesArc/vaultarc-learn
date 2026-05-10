@@ -1,6 +1,6 @@
 import { Hono } from 'hono'
 import { Env } from '../index'
-import { runAI, truncateForAI } from '../lib/ai'
+import { runAIFast as runAI, truncateForAI } from '../lib/ai'
 
 export const keyterms = new Hono<{ Bindings: Env }>()
 
@@ -13,8 +13,10 @@ keyterms.post('/', async (c) => {
 
     const { text } = truncateForAI(note.content)
     const raw = await runAI(c.env.AI,
-      `Extract the most important key terms and concepts from the notes provided.
-Output ONLY a JSON array of strings (the terms). Maximum 12 terms. Short phrases only (1-4 words each).
+      `Extract the key terms that are load-bearing to understanding this topic.
+Only include terms where knowing them unlocks understanding of something else — skip supporting details and examples.
+Prioritise terms that are frequently tested, commonly confused, or essential building blocks.
+Output ONLY a JSON array of strings. Maximum 12 terms. Short phrases only (1-4 words each).
 Example: ["digital signature","hash function","non-repudiation","public key"]
 No markdown. No explanation.`,
       text
